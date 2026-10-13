@@ -1,0 +1,2005 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#FFC21A">
+<title>KUKA TAXI</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FFC21A'/%3E%3Cpath d='M18 14h9v14l13-14h11L35 31l17 19H40L27 36v14h-9z' fill='%231A1400'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=Unbounded:wght@600;700;800&display=swap&subset=cyrillic">
+<style>
+:root{
+  --ink:#0E1A2B; --ink-2:#4A5A70; --paper:#F2F5F9; --card:#FFFFFF; --line:#DCE3EC;
+  --yellow:#FFC21A; --yellow-ink:#1A1400; --sky:#1B7FD3; --sky-soft:#E4F1FC;
+  --ok:#14804A; --ok-soft:#E1F5EA; --warn:#B45309; --warn-soft:#FDF0DC; --bad:#C23030; --bad-soft:#FBE7E7;
+  --shadow:0 8px 28px rgba(14,26,43,.10);
+  --display:'Unbounded','Onest',system-ui,sans-serif; --body:'Onest',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --r:16px; color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){ --ink:#EEF3FA; --ink-2:#9EB0C7; --paper:#0A121D; --card:#121E2D; --line:#233449;
+    --sky:#62B3FF; --sky-soft:#10283F; --ok:#4AD18B; --ok-soft:#10301F; --warn:#F2A33A; --warn-soft:#33260F; --bad:#FF8080; --bad-soft:#3A1717;
+    --shadow:0 8px 28px rgba(0,0,0,.45); color-scheme:dark; }
+}
+:root[data-theme="dark"]{ --ink:#EEF3FA; --ink-2:#9EB0C7; --paper:#0A121D; --card:#121E2D; --line:#233449;
+    --sky:#62B3FF; --sky-soft:#10283F; --ok:#4AD18B; --ok-soft:#10301F; --warn:#F2A33A; --warn-soft:#33260F; --bad:#FF8080; --bad-soft:#3A1717;
+    --shadow:0 8px 28px rgba(0,0,0,.45); color-scheme:dark; }
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:16px/1.45 var(--body);background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);line-height:1.15;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:clamp(28px,6vw,46px);font-weight:800} h2{font-size:clamp(20px,3.4vw,28px);font-weight:700} h3{font-size:16px;font-weight:700}
+p{margin:0} a{color:var(--sky)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--sky);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.muted{color:var(--ink-2)} .small{font-size:13px} .center{text-align:center} .grow{flex:1;min-width:0}
+.row{display:flex;gap:12px;align-items:center;min-width:0} .wrap{flex-wrap:wrap} .col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.between{justify-content:space-between}
+.gap8{gap:8px} .gap20{gap:20px}
+
+/* логотип: плафон такси */
+.logo{display:inline-flex;align-items:baseline;gap:6px;background:var(--yellow);color:var(--yellow-ink);padding:7px 14px 8px;border-radius:10px 10px 6px 6px;
+  font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:.02em;text-decoration:none;box-shadow:0 3px 0 rgba(0,0,0,.18)}
+.logo small{font-size:9px;font-weight:600;letter-spacing:.2em}
+
+/* кнопки */
+.btn{appearance:none;border:0;border-radius:14px;padding:14px 20px;font-weight:700;cursor:pointer;background:var(--card);color:var(--ink);border:1.5px solid var(--line);
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;min-height:50px;transition:transform .08s}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--yellow);color:var(--yellow-ink);border-color:transparent;box-shadow:0 3px 0 rgba(0,0,0,.16)}
+.btn.dark{background:var(--ink);color:var(--paper);border-color:transparent}
+.btn.danger{color:var(--bad);border-color:var(--bad)}
+.btn.block{width:100%} .btn.small{min-height:40px;padding:8px 14px;font-size:14px;border-radius:12px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+/* формы */
+label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--ink-2)}
+.input,select.input,textarea.input{width:100%;padding:13px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);font-size:16px;min-height:50px}
+.input:focus{border-color:var(--sky);outline:none;box-shadow:0 0 0 3px var(--sky-soft)}
+.code-input{font-family:var(--display);font-size:28px;letter-spacing:.35em;text-align:center}
+.err{color:var(--bad);font-size:14px;min-height:20px}
+.hint{background:var(--sky-soft);color:var(--ink);border-radius:12px;padding:12px 14px;font-size:14px}
+.hint.warn{background:var(--warn-soft)} .hint.ok{background:var(--ok-soft)} .hint.bad{background:var(--bad-soft)}
+
+/* карточки */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.card.pad0{padding:0;overflow:hidden}
+.pill{display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:700;background:var(--sky-soft);color:var(--sky)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.bad{background:var(--bad-soft);color:var(--bad)}
+.price{font-family:var(--display);font-weight:700;font-variant-numeric:tabular-nums}
+.stars{color:var(--yellow);letter-spacing:2px;font-size:18px;text-shadow:0 0 1px rgba(0,0,0,.35)}
+.plate{display:inline-block;font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:.08em;background:#fff;color:#111;border:2px solid #111;border-radius:8px;padding:3px 12px}
+
+/* оболочка приложения */
+#app{min-height:100%}
+.shell{max-width:560px;margin:0 auto;padding:16px 16px calc(92px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:16px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.tabbar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));z-index:20}
+.tabbar nav{display:flex;width:100%;max-width:560px}
+.tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;text-decoration:none;color:var(--ink-2);font-size:12px;font-weight:600;border-radius:12px}
+.tabbar a[aria-current=page]{color:var(--ink);background:var(--yellow)}
+.tabbar svg{width:22px;height:22px}
+
+/* карта и заказ */
+.map{height:44vh;min-height:260px;border-radius:var(--r);border:1px solid var(--line);overflow:hidden;position:relative;z-index:1}
+.map.tall{height:52vh}
+.pin{width:18px;height:18px;border-radius:50%;border:4px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.pin.a{background:var(--sky)} .pin.b{background:var(--yellow)} .pin.car{background:#111;width:22px;height:22px;border-color:var(--yellow)}
+.fieldrow{display:flex;gap:10px;align-items:center}
+.dot{width:12px;height:12px;border-radius:50%;flex:none} .dot.a{background:var(--sky)} .dot.b{background:var(--yellow);box-shadow:0 0 0 2px var(--ink)}
+.results{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+.results button{text-align:left;padding:12px 14px;border:0;border-bottom:1px solid var(--line);background:transparent;cursor:pointer}
+.results button:last-child{border-bottom:0} .results button:hover{background:var(--sky-soft)}
+.tariffs{display:flex;flex-direction:column;gap:8px}
+.tariff{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1.5px solid var(--line);border-radius:14px;background:var(--card);cursor:pointer;text-align:left;width:100%}
+.tariff[aria-pressed=true]{border-color:var(--ink);box-shadow:0 0 0 2px var(--yellow)}
+.tariff .nm{font-weight:700} .tariff .sub{font-size:13px;color:var(--ink-2)}
+.pulse{width:14px;height:14px;border-radius:50%;background:var(--yellow);box-shadow:0 0 0 0 rgba(255,194,26,.7);animation:pulse 1.6s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 16px rgba(255,194,26,0)}100%{box-shadow:0 0 0 0 rgba(255,194,26,0)}}
+.steps{display:flex;gap:6px} .steps i{flex:1;height:5px;border-radius:5px;background:var(--line)} .steps i.on{background:var(--yellow)}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}*{transition:none!important}}
+
+/* список поездок */
+.trip{display:flex;flex-direction:column;gap:6px}
+.addr{display:flex;gap:8px;align-items:flex-start;font-size:14px} .addr .dot{margin-top:6px}
+
+/* верификация */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tile{position:relative;border:2px dashed var(--line);border-radius:14px;min-height:130px;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px;text-align:center;cursor:pointer;overflow:hidden}
+.tile.done{border-style:solid;border-color:var(--ok)}
+.tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tile .cap{position:relative;font-size:12px;font-weight:700;background:rgba(14,26,43,.78);color:#fff;border-radius:8px;padding:3px 8px;margin-top:auto}
+.tile input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.codebox{font-family:var(--display);font-size:40px;font-weight:800;letter-spacing:.2em;text-align:center;background:var(--yellow);color:var(--yellow-ink);border-radius:14px;padding:12px}
+
+/* прочее */
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.kpi b{display:block;font-family:var(--display);font-size:18px} .kpi span{font-size:12px;color:var(--ink-2)}
+.switch{position:relative;width:64px;height:36px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:1}
+.switch i{position:absolute;inset:0;border-radius:99px;background:var(--line);transition:background .2s}
+.switch i::after{content:'';position:absolute;left:4px;top:4px;width:28px;height:28px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);transition:transform .2s}
+.switch input:checked+i{background:var(--ok)} .switch input:checked+i::after{transform:translateX(28px)}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:12px 18px;border-radius:12px;z-index:60;max-width:90vw;box-shadow:var(--shadow);font-weight:600}
+.modal-back{position:fixed;inset:0;background:rgba(5,10,18,.6);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:var(--card);width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;max-height:92vh;overflow:auto}
+.starpick{display:flex;gap:6px;justify-content:center} .starpick button{background:none;border:0;font-size:40px;cursor:pointer;color:var(--line);padding:2px}
+.starpick button.on{color:var(--yellow);text-shadow:0 0 1px rgba(0,0,0,.4)}
+.langbtn{background:none;border:1.5px solid var(--line);border-radius:10px;padding:6px 10px;font-weight:700;cursor:pointer}
+
+/* лендинг */
+.land{max-width:1040px;margin:0 auto;padding:16px 20px 60px;display:flex;flex-direction:column;gap:56px}
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:32px;align-items:center;padding-top:28px}
+.hero h1 em{font-style:normal;background:linear-gradient(transparent 62%,var(--yellow) 62%)}
+.hero-card{background:var(--ink);color:var(--paper);border-radius:24px;padding:22px;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow)}
+.hero-card .rowx{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(255,255,255,.14);padding-bottom:10px;font-size:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.feat{display:flex;flex-direction:column;gap:8px}
+.feat b{font-family:var(--display);font-size:15px}
+.cities{display:flex;flex-wrap:wrap;gap:8px}
+.cities span{padding:8px 14px;border-radius:99px;background:var(--card);border:1px solid var(--line);font-weight:600;font-size:14px}
+@media (max-width:760px){.hero{grid-template-columns:1fr}.land{gap:40px}}
+
+
+.adm{max-width:1100px;margin:0 auto;padding:16px 16px 60px;display:flex;flex-direction:column;gap:16px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.tabs button.on{background:var(--ink);color:var(--paper)}
+.split{display:grid;grid-template-columns:minmax(260px,320px) 1fr;gap:16px;align-items:start}
+@media(max-width:820px){.split{grid-template-columns:1fr}}
+.qitem{width:100%;text-align:left;padding:12px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.qitem[aria-pressed=true]{border-color:var(--ink);box-shadow:0 0 0 2px var(--yellow)}
+.photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.photos figure{margin:0;display:flex;flex-direction:column;gap:6px}
+.photos img{width:100%;border-radius:12px;border:1px solid var(--line);background:#000;cursor:zoom-in;max-height:360px;object-fit:contain}
+.photos figcaption{font-size:13px;font-weight:600}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-size:12px;color:var(--ink-2);text-transform:uppercase;letter-spacing:.06em}
+.big{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:80;display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:12px}
+.big img{max-width:100%;max-height:100%;object-fit:contain}
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.checks label{display:flex;gap:8px;align-items:flex-start;font-size:14px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+
+
+.demo-bar{position:sticky;top:0;z-index:45;background:var(--ink);color:var(--paper);padding:8px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:13px}
+.demo-bar .tag{background:var(--yellow);color:var(--yellow-ink);font-family:var(--display);font-weight:800;font-size:11px;letter-spacing:.12em;padding:3px 8px;border-radius:6px}
+.demo-bar button{border:1px solid rgba(255,255,255,.28);background:transparent;color:inherit;border-radius:10px;padding:6px 12px;font-weight:600;cursor:pointer;font-size:13px}
+.demo-bar button[aria-pressed=true]{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+.demo-help{background:var(--card);border-bottom:1px solid var(--line);padding:12px 16px;font-size:14px}
+.demo-help ol{margin:6px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:4px;max-width:720px}
+.dmap{position:relative;overflow:hidden;background:var(--sky-soft);touch-action:none;cursor:grab}
+.dmap-bg{position:absolute;inset:0;background-image:linear-gradient(var(--line) 2px,transparent 2px),linear-gradient(90deg,var(--line) 2px,transparent 2px),radial-gradient(circle at 30% 40%,rgba(27,127,211,.10),transparent 55%);background-size:70px 70px,70px 70px,100% 100%}
+.dmap-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.dmap-lay{position:absolute;inset:0;pointer-events:none}
+.dmap-pin{position:absolute;left:0;top:0}
+.dmap-tag{position:absolute;left:8px;bottom:6px;font-size:11px;color:var(--ink-2);background:var(--card);padding:2px 8px;border-radius:8px;opacity:.92;pointer-events:none;max-width:70%}
+.dmap-zoom{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:4px;z-index:3}
+.dmap-zoom button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:20px;cursor:pointer}
+.tabbar{z-index:30}
+
+</style>
+</head>
+<body>
+<div class="demo-bar" role="region" aria-label="Демо-режим">
+  <span class="tag">ДЕМО</span><span>Данные остаются в вашем браузере</span><span style="flex:1"></span>
+  <button type="button" id="demoSite" aria-pressed="true">Сайт</button>
+  <button type="button" id="demoAdmin" aria-pressed="false">Админ-панель</button>
+  <button type="button" id="demoHelp" aria-expanded="false">Что попробовать</button>
+  <button type="button" id="demoReset">Сбросить</button>
+</div>
+<div class="demo-help" id="demoHelpBox" hidden>
+  <b>Как посмотреть, как всё работает</b>
+  <ol>
+    <li>Войдите: любой номер и код входа (его сообщает автор демо).</li>
+    <li>«Заказ»: отметьте точки на схеме или найдите адрес, например «Байтерек» и «Хан Шатыр». Закажите: водитель найдётся сам и приедет.</li>
+    <li>«Водителю»: заполните анкету, нажмите «Подставить демо-фото» и отправьте на проверку.</li>
+    <li>Откройте «Админ-панель» (вверху), допустите водителя по чек-листу. Вернитесь в «Сайт»: вы допущены.</li>
+    <li>Выйдите на линию и примите заказ. Проверку лица можно запросить заново в админке: «Водители», «Сверить лицо».</li>
+  </ol>
+  <p style="margin-top:8px;color:var(--ink-2)">Это демо без сервера: коды WhatsApp, реальные карты и платежи в нём имитируются. Боевая версия лежит в папке server этого репозитория.</p>
+</div>
+<div id="app"></div>
+<div id="root" hidden></div>
+<script>
+/* Демо KUKA TAXI: имитация сервера внутри браузера. Ничего не уходит в сеть. */
+(() => {
+'use strict';
+window.__DEMO__ = true;
+const CODE = '9416';
+const KEY = 'kd_db_v3', SKEY = 'kd_sess_v3', AKEY = 'kd_asess_v3';
+const mem = {};
+const ls = {
+  get(k) { try { return localStorage.getItem(k); } catch { return mem[k] ?? null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch { mem[k] = v; } },
+  del(k) { try { localStorage.removeItem(k); } catch { delete mem[k]; } },
+};
+const DAY = 86400000;
+const SP = () => window.__DEMO_SPEED || 1;
+const REG_KEYS = ['selfie_with_id', 'id_front', 'id_back', 'license_front', 'license_back', 'tech_passport', 'car_photo'];
+const REQUIRED = { registration: REG_KEYS, face: ['selfie_with_id'] };
+const CLASSES = ['economy', 'comfort', 'business', 'minivan'];
+const SERVES = { economy: ['economy'], comfort: ['economy', 'comfort'], business: ['economy', 'comfort', 'business'], minivan: ['economy', 'minivan'] };
+const CITIES = ['Астана', 'Алматы', 'Шымкент', 'Караганда', 'Актобе', 'Атырау', 'Павлодар', 'Усть-Каменогорск', 'Семей', 'Костанай', 'Петропавловск', 'Актау', 'Тараз', 'Кызылорда', 'Уральск', 'Туркестан', 'Талдыкорган', 'Кокшетау', 'Темиртау', 'Другой город'];
+const COLORS = ['белый', 'чёрный', 'серый', 'серебристый', 'синий', 'красный', 'зелёный', 'жёлтый', 'коричневый', 'бежевый', 'другой'];
+const PLACES = [
+  { addr: 'Монумент Байтерек, Астана', lat: 51.1283, lng: 71.4305 },
+  { addr: 'ТРЦ Хан Шатыр, Астана', lat: 51.1327, lng: 71.4035 },
+  { addr: 'Астана Арена', lat: 51.1088, lng: 71.4029 },
+  { addr: 'Мега Силк Вэй, Астана', lat: 51.0890, lng: 71.4030 },
+  { addr: 'EXPO, Астана', lat: 51.0904, lng: 71.4166 },
+  { addr: 'Аэропорт Астаны', lat: 51.0222, lng: 71.4669 },
+  { addr: 'Вокзал Нурлы Жол, Астана', lat: 51.1417, lng: 71.4950 },
+  { addr: 'Площадь Республики, Алматы', lat: 43.2389, lng: 76.9455 },
+  { addr: 'Аэропорт Алматы', lat: 43.3521, lng: 77.0405 },
+];
+const TARIFFS = {
+  economy: { base: 400, per_km: 90, per_min: 10, min: 700 }, comfort: { base: 550, per_km: 115, per_min: 13, min: 900 },
+  business: { base: 800, per_km: 160, per_min: 18, min: 1400 }, minivan: { base: 650, per_km: 135, per_min: 15, min: 1100 },
+};
+
+/* ---------- данные ---------- */
+let db;
+function seed() {
+  const t = Date.now();
+  const d = { nextId: 100, users: {}, drivers: {}, rides: [], queue: [], settings: { face_check_hours: 34, commission_percent: 0, offer_radius_km: 10, tariffs: TARIFFS } };
+  const U = (id, name, phone, extra = {}) => { d.users[id] = { id, name, phone, lang: 'ru', ...extra }; };
+  const D = (id, o) => { d.drivers[id] = { user_id: id, city: 'Астана', status: 'approved', reject_reason: '', face_reject_reason: '', approved_at: t - 5 * DAY, face_valid_until: t + 20 * 3600e3, online: false, lat: null, lng: null, challenge: String(1000 + Math.floor(Math.random() * 9000)), ...o }; };
+  U(1, 'Нурлан Ахметов', '+77010000111', { fixed: { rating: 4.9, count: 212 } });
+  D(1, { car_make: 'Toyota', car_model: 'Camry', car_year: 2020, car_color: 'белый', plate: '777KZ02', car_class: 'comfort', online: true });
+  U(2, 'Мадина Сейтова', '+77010000222', { fixed: { rating: 4.8, count: 57 } });
+  U(11, 'Ербол Касымов', '+77010001111', { fixed: { rating: 4.7, count: 130 } });
+  D(11, { car_make: 'Hyundai', car_model: 'Elantra', car_year: 2019, car_color: 'серый', plate: '451BAK01', car_class: 'economy', online: true, face_valid_until: t + 2 * 3600e3 });
+  U(12, 'Айдос Нурланов', '+77010001212', { fixed: { rating: 4.95, count: 301 } });
+  D(12, { car_make: 'Kia', car_model: 'K5', car_year: 2021, car_color: 'чёрный', plate: '090AID02', car_class: 'business' });
+  U(21, 'Данияр Темиров', '+77010002121');
+  D(21, { status: 'pending', approved_at: null, face_valid_until: 0, car_make: 'Kia', car_model: 'Rio', car_year: 2018, car_color: 'белый', plate: '210XYZ02', car_class: 'economy' });
+  U(22, 'Асхат Бекжанов', '+77010002222');
+  D(22, { status: 'pending', approved_at: null, face_valid_until: 0, car_make: 'Chevrolet', car_model: 'Cobalt', car_year: 2017, car_color: 'серебристый', plate: '555ASH01', car_class: 'economy' });
+  d.queue.push({ id: 'q1', driverId: 21, kind: 'registration', challenge: '4821', createdAt: t - 35 * 60e3, keys: REG_KEYS });
+  d.queue.push({ id: 'q2', driverId: 22, kind: 'registration', challenge: '7305', createdAt: t - 12 * 60e3, keys: REG_KEYS });
+  d.queue.push({ id: 'q3', driverId: 11, kind: 'face', challenge: '1960', createdAt: t - 4 * 60e3, keys: ['selfie_with_id'] });
+  const hist = (driver, pass, daysAgo, a, b, price, r1, r2) => d.rides.push({ id: d.nextId++, passenger_id: pass, driver_id: driver, status: 'completed', pickup: PLACES[a], drop: PLACES[b], distance_km: 6.4, duration_min: 14, car_class: 'economy', price, boost: 0, comment: '', created_at: t - daysAgo * DAY, accepted_at: t - daysAgo * DAY + 60e3, arrived_at: t - daysAgo * DAY + 240e3, started_at: t - daysAgo * DAY + 300e3, finished_at: t - daysAgo * DAY + 1200e3, rating_for_driver: r1, rating_for_passenger: r2, bot: null });
+  hist(11, 2, 1, 0, 1, 1650, 5, 5); hist(12, 2, 2, 2, 6, 2310, 5, 4); hist(11, 2, 3, 3, 4, 1180, 4, 5);
+  return d;
+}
+function loadDb() { try { const raw = ls.get(KEY); db = raw ? JSON.parse(raw) : seed(); } catch { db = seed(); } if (!db.users) db = seed(); }
+function save() { try { ls.set(KEY, JSON.stringify(db)); } catch { /* квота */ } }
+loadDb();
+
+/* ---------- утилиты ---------- */
+const err = (http, code, extra) => Object.assign(new Error(code), { http, code, extra });
+const now = () => Date.now();
+const sess = () => { const v = ls.get(SKEY); return v ? Number(v) : null; };
+const asess = () => ls.get(AKEY);
+const ADMIN = { id: 9000, name: 'Администратор', phone: '+77000000000', lang: 'ru', is_admin: true };
+const round1 = (x) => Math.round(x * 10) / 10;
+function haversine(a, b) {
+  const R = 6371, rad = (x) => (x * Math.PI) / 180, dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+const inKz = (lat, lng) => Number.isFinite(lat) && Number.isFinite(lng) && lat >= 40.5 && lat <= 55.5 && lng >= 46.4 && lng <= 87.4;
+function normPhone(raw) {
+  if (typeof raw !== 'string') return null;
+  let d = raw.replace(/\D/g, '');
+  if (d.length === 11 && d[0] === '8') d = '7' + d.slice(1);
+  if (d.length === 10) d = '7' + d;
+  return /^7[67]\d{9}$/.test(d) ? '+' + d : null;
+}
+const priceFor = (cls, km, min) => { const t = db.settings.tariffs[cls]; return Math.round(Math.max(t.min, t.base + km * t.per_km + min * t.per_min) / 10) * 10; };
+const str = (v, lo, hi) => { if (typeof v !== 'string') return null; const s = v.trim(); return s.length >= lo && s.length <= hi ? s : null; };
+const isActive = (r) => ['searching', 'accepted', 'arrived', 'in_progress'].includes(r.status);
+const activeOf = (uid, field) => db.rides.filter((r) => r[field] === uid && isActive(r)).sort((a, b) => b.id - a.id)[0];
+
+function ratingFor(uid, as) {
+  const u = db.users[uid];
+  const f = as === 'driver' ? 'rating_for_driver' : 'rating_for_passenger';
+  const k = as === 'driver' ? 'driver_id' : 'passenger_id';
+  const rated = db.rides.filter((r) => r[k] === uid && r[f] != null);
+  let sum = rated.reduce((s, r) => s + r[f], 0), n = rated.length;
+  if (u?.fixed) { sum += u.fixed.rating * u.fixed.count; n += u.fixed.count; }
+  return { rating: n ? Math.round((sum / n) * 10) / 10 : null, count: n };
+}
+const userView = (u) => { const r = ratingFor(u.id, 'passenger'); return { id: u.id, name: u.name, phone: u.phone, lang: u.lang, is_admin: !!u.is_admin, rating: r.rating, rating_count: r.count }; };
+function driverView(d) {
+  const r = ratingFor(d.user_id, 'driver');
+  const q = db.queue.find((x) => x.driverId === d.user_id);
+  return {
+    status: d.status, reject_reason: d.reject_reason, face_reject_reason: d.face_reject_reason, city: d.city, car_make: d.car_make, car_model: d.car_model,
+    car_year: d.car_year, car_color: d.car_color, plate: d.plate, car_class: d.car_class, online: !!d.online, face_valid_until: d.face_valid_until, face_ok: d.face_valid_until > now(),
+    rating: r.rating, rating_count: r.count, verification_pending: q ? { kind: q.kind, created_at: q.createdAt } : null,
+  };
+}
+function rideView(r, viewer) {
+  const out = {
+    id: r.id, status: r.status, pickup: r.pickup, drop: r.drop, distance_km: round1(r.distance_km), duration_min: Math.round(r.duration_min), car_class: r.car_class,
+    price: r.price, boost: r.boost, payment: 'cash', comment: r.comment, created_at: r.created_at, accepted_at: r.accepted_at, arrived_at: r.arrived_at,
+    started_at: r.started_at, finished_at: r.finished_at, cancel_by: r.cancel_by, cancel_reason: r.cancel_reason,
+  };
+  if (r.driver_id && (r.passenger_id === viewer || viewer === -1)) {
+    const d = db.drivers[r.driver_id], u = db.users[r.driver_id], rt = ratingFor(r.driver_id, 'driver');
+    out.driver = { name: u.name, phone: u.phone, car: `${d.car_make} ${d.car_model}`, color: d.car_color, plate: d.plate, rating: rt.rating, rating_count: rt.count, lat: d.lat, lng: d.lng };
+  }
+  if (r.driver_id === viewer) {
+    const u = db.users[r.passenger_id], rp = ratingFor(r.passenger_id, 'passenger');
+    out.passenger = { name: u.name.split(' ')[0], phone: u.phone, rating: rp.rating, rating_count: rp.count };
+  }
+  if (r.passenger_id === viewer) out.my_rating = r.rating_for_driver;
+  if (r.driver_id === viewer) out.my_rating = r.rating_for_passenger;
+  return out;
+}
+function offerView(r, d) {
+  return { id: r.id, pickup: r.pickup, drop: { addr: r.drop.addr }, distance_km: round1(r.distance_km), duration_min: Math.round(r.duration_min), price: r.price, boost: r.boost, car_class: r.car_class, comment: r.comment, created_at: r.created_at,
+    to_pickup_km: d?.lat != null ? round1(haversine(d, r.pickup)) : null };
+}
+
+/* ---------- события (вместо SSE) ---------- */
+const sources = new Set();
+class MockES {
+  constructor(url) { this.l = {}; this.closed = false; this.admin = /admin=1/.test(url); sources.add(this); setTimeout(() => this.fire('hello', {}), 40); }
+  addEventListener(n, f) { (this.l[n] = this.l[n] || []).push(f); }
+  fire(n, data) { if (this.closed) return; (this.l[n] || []).forEach((f) => { try { f({ data: JSON.stringify(data) }); } catch (e) { console.error(e); } }); }
+  close() { this.closed = true; sources.delete(this); }
+}
+window.EventSource = MockES;
+const emitUser = (uid, ev, data) => { if (sess() === uid) for (const s of sources) if (!s.admin) s.fire(ev, data); };
+const emitAdmins = (ev, data) => { for (const s of sources) if (s.admin) s.fire(ev, data); };
+function notifyRide(r) {
+  emitUser(r.passenger_id, 'ride_update', { ride: rideView(r, r.passenger_id) });
+  if (r.driver_id) emitUser(r.driver_id, 'ride_update', { ride: rideView(r, r.driver_id) });
+}
+
+/* ---------- картинки ---------- */
+function demoPhoto(label, w = 560, h = 360) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d');
+  const grad = g.createLinearGradient(0, 0, w, h); grad.addColorStop(0, '#dfe7f1'); grad.addColorStop(1, '#b9c7da');
+  g.fillStyle = grad; g.fillRect(0, 0, w, h);
+  g.fillStyle = '#ffffff'; g.fillRect(24, 24, w - 48, h - 48);
+  g.fillStyle = '#FFC21A'; g.fillRect(24, 24, w - 48, 54);
+  g.fillStyle = '#1A1400'; g.font = '700 24px sans-serif'; g.fillText('ДЕМО-ДОКУМЕНТ', 40, 60);
+  g.fillStyle = '#0E1A2B'; g.font = '600 26px sans-serif'; g.fillText(label, 40, 128, w - 80);
+  g.fillStyle = '#c4cedb';
+  for (let i = 0; i < 5; i++) g.fillRect(40, 160 + i * 26, 220 + ((i * 53) % 180), 12);
+  g.fillStyle = '#9fb0c6'; g.fillRect(w - 170, 150, 120, 140);
+  g.fillStyle = '#5a6b82'; g.font = '14px sans-serif'; g.fillText('образец, не настоящий документ', 40, h - 40);
+  return c.toDataURL('image/jpeg', 0.6);
+}
+window.__demoPhoto = demoPhoto;
+function shrink(dataUrl, max = 420) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      resolve(c.toDataURL('image/jpeg', 0.55));
+    };
+    img.onerror = () => resolve(null);
+    img.src = dataUrl;
+  });
+}
+const LABELS = { selfie_with_id: 'Селфи с удостоверением', id_front: 'Удостоверение, лицо', id_back: 'Удостоверение, оборот', license_front: 'Права, лицо', license_back: 'Права, оборот', tech_passport: 'Техпаспорт', car_photo: 'Фото авто' };
+const phCache = {};
+
+/* ---------- симуляция ---------- */
+function moveToward(d, target, k) { d.lat = (d.lat ?? target.lat + 0.01) + (target.lat - (d.lat ?? target.lat + 0.01)) * k; d.lng = (d.lng ?? target.lng - 0.01) + (target.lng - (d.lng ?? target.lng - 0.01)) * k; }
+function createOffer(d) {
+  const a = PLACES[Math.floor(Math.random() * 7)];
+  let b; do { b = PLACES[Math.floor(Math.random() * 7)]; } while (b === a);
+  const km = haversine(a, b) * 1.3, min = km / 30 * 60 + 2;
+  const r = { id: db.nextId++, passenger_id: 2, driver_id: null, status: 'searching', pickup: a, drop: b, distance_km: km, duration_min: min, car_class: d.car_class, price: priceFor(d.car_class, km, min), boost: 0,
+    comment: ['', 'Подъезд 2, жду у входа', 'С багажом, 2 чемодана'][Math.floor(Math.random() * 3)], created_at: now(), bot: 'passenger' };
+  db.rides.push(r);
+  d.lat = a.lat + 0.01; d.lng = a.lng - 0.008; // демо-водитель находится рядом
+  emitUser(d.user_id, 'offer', { offer: offerView(r, d) });
+}
+function tick() {
+  const t = now(); let changed = false;
+  for (const r of db.rides) {
+    if (!isActive(r)) continue;
+    if (r.status === 'searching' && r.bot === 'driver' && t >= r.next_at) {
+      const d = db.drivers[1]; r.status = 'accepted'; r.driver_id = 1; r.accepted_at = t; d.lat = r.pickup.lat + 0.012; d.lng = r.pickup.lng - 0.010; r.next_at = t + 11000 / SP();
+      notifyRide(r); changed = true;
+    } else if (r.bot === 'driver' && r.driver_id === 1) {
+      const d = db.drivers[1];
+      if (r.status === 'accepted') {
+        moveToward(d, r.pickup, 0.22); emitUser(r.passenger_id, 'driver_location', { ride_id: r.id, lat: d.lat, lng: d.lng });
+        if (t >= r.next_at) { r.status = 'arrived'; r.arrived_at = t; r.next_at = t + 6000 / SP(); notifyRide(r); }
+        changed = true;
+      } else if (r.status === 'arrived' && t >= r.next_at) { r.status = 'in_progress'; r.started_at = t; r.next_at = t + 15000 / SP(); notifyRide(r); changed = true; }
+      else if (r.status === 'in_progress') {
+        moveToward(d, r.drop, 0.12); emitUser(r.passenger_id, 'driver_location', { ride_id: r.id, lat: d.lat, lng: d.lng });
+        if (t >= r.next_at) { r.status = 'completed'; r.finished_at = t; notifyRide(r); }
+        changed = true;
+      }
+    }
+    if (r.status === 'searching' && t - r.created_at > 10 * 60e3) { r.status = 'expired'; notifyRide(r); for (const s of sources) s.fire('offer_gone', { id: r.id }); changed = true; }
+  }
+  const me = sess(), d = me && db.drivers[me];
+  if (d && d.status === 'approved' && d.online && d.face_valid_until > t && d.next_offer_at && t >= d.next_offer_at && !activeOf(me, 'driver_id') && !db.rides.some((r) => r.bot === 'passenger' && r.status === 'searching')) {
+    createOffer(d); d.next_offer_at = t + 25000; changed = true;
+  }
+  if (d && d.online && d.face_valid_until <= t && !activeOf(me, 'driver_id')) { d.online = false; emitUser(me, 'face_required', { driver: driverView(d) }); changed = true; }
+  if (changed) save();
+}
+setInterval(tick, 1000);
+
+/* ---------- API ---------- */
+async function route(method, path, q, body, isAdmin) {
+  const uid = isAdmin ? (asess() ? 9000 : null) : sess();
+  const user = uid === 9000 ? ADMIN : uid ? db.users[uid] : null;
+  const need = () => { if (!user) throw err(401, 'unauthorized'); return user; };
+  const needAdmin = () => { if (!isAdmin || !need()) throw err(403, 'forbidden'); };
+  let m;
+  const is = (me, re) => method === me && (m = re.exec(path));
+
+  if (is('GET', /^\/api\/config$/)) return { face_check_hours: db.settings.face_check_hours, commission_percent: db.settings.commission_percent, tariffs: db.settings.tariffs, support_phone: '' };
+
+  /* вход по коду */
+  if (is('POST', /^\/api\/auth\/request$/)) {
+    const phone = normPhone(body.phone); if (!phone) throw err(400, 'bad_phone');
+    return { ok: true, retry_after: 60, new_user: isAdmin ? false : !Object.values(db.users).some((u) => u.phone === phone) };
+  }
+  if (is('POST', /^\/api\/auth\/verify$/)) {
+    const phone = normPhone(body.phone), code = typeof body.code === 'string' ? body.code.trim() : '';
+    if (!phone || !/^\d{6}$|^\d{4}$/.test(code)) throw err(400, 'bad_request');
+    if (code !== CODE) throw err(400, 'wrong_code');
+    if (isAdmin) { ls.set(AKEY, '1'); return { ok: true, user: userView(ADMIN) }; }
+    let u = Object.values(db.users).find((x) => x.phone === phone);
+    if (!u) {
+      const name = str(body.name, 2, 40); if (!name) throw err(400, 'name_required');
+      u = { id: db.nextId++, name, phone, lang: body.lang === 'kk' ? 'kk' : 'ru' }; db.users[u.id] = u;
+      const t = now(), mk = (days, a, b, price, stars) => db.rides.push({ id: db.nextId++, passenger_id: u.id, driver_id: 1, status: 'completed', pickup: PLACES[a], drop: PLACES[b], distance_km: 5.2, duration_min: 12, car_class: 'comfort', price, boost: 0, comment: '', created_at: t - days * DAY, accepted_at: t - days * DAY + 1, arrived_at: t - days * DAY + 2, started_at: t - days * DAY + 3, finished_at: t - days * DAY + 900e3, rating_for_driver: stars, rating_for_passenger: null, bot: null });
+      mk(3, 0, 1, 1840, 5); mk(9, 3, 6, 2260, null);
+    }
+    ls.set(SKEY, String(u.id)); save();
+    return { ok: true, user: userView(u) };
+  }
+  if (is('POST', /^\/api\/auth\/logout$/)) { ls.del(isAdmin ? AKEY : SKEY); return { ok: true }; }
+
+  if (is('GET', /^\/api\/me$/)) {
+    need();
+    if (isAdmin) return { user: userView(ADMIN), driver: null, active_ride: null, active_drive: null };
+    const d = db.drivers[user.id], a = activeOf(user.id, 'passenger_id'), ad = d ? activeOf(user.id, 'driver_id') : null;
+    return { user: userView(user), driver: d ? driverView(d) : null, active_ride: a ? rideView(a, user.id) : null, active_drive: ad ? rideView(ad, user.id) : null };
+  }
+  if (is('PATCH', /^\/api\/me$/)) {
+    need(); const name = body.name === undefined ? user.name : str(body.name, 2, 40), lang = body.lang === undefined ? user.lang : (['ru', 'kk'].includes(body.lang) ? body.lang : null);
+    if (!name || !lang) throw err(400, 'bad_request'); user.name = name; user.lang = lang; save(); return { ok: true, user: userView(user) };
+  }
+
+  /* карта */
+  if (is('GET', /^\/api\/geo\/search$/)) {
+    need(); const s = (q.get('q') || '').toLowerCase().trim(); if (s.length < 2) throw err(400, 'bad_request');
+    const words = s.split(/\s+/);
+    return { results: PLACES.filter((p) => words.every((w) => p.addr.toLowerCase().includes(w))).slice(0, 6) };
+  }
+  if (is('GET', /^\/api\/geo\/reverse$/)) {
+    need(); const lat = Number(q.get('lat')), lng = Number(q.get('lng')); if (!inKz(lat, lng)) throw err(400, 'out_of_country');
+    const near = PLACES.map((p) => [haversine({ lat, lng }, p), p]).sort((a, b) => a[0] - b[0])[0];
+    return { addr: near[0] < 0.7 ? near[1].addr : `Точка на карте (${lat.toFixed(4)}, ${lng.toFixed(4)})` };
+  }
+  const pt = (p, addr) => {
+    if (!p || typeof p !== 'object') throw err(400, 'bad_point'); const lat = Number(p.lat), lng = Number(p.lng);
+    if (!inKz(lat, lng)) throw err(400, 'out_of_country'); const a = addr ? str(p.addr, 2, 200) : null; if (addr && !a) throw err(400, 'bad_address'); return { lat, lng, addr: a };
+  };
+  const routeOf = (a, b) => {
+    const km = haversine(a, b) * 1.3, min = km / 30 * 60 + 2, mid = (a.lng + b.lng) / 2;
+    return { km, min, geometry: { type: 'LineString', coordinates: [[a.lng, a.lat], [mid, a.lat], [mid, b.lat], [b.lng, b.lat]] } };
+  };
+  if (is('POST', /^\/api\/quote$/)) {
+    need(); const a = pt(body.pickup), b = pt(body.drop), r = routeOf(a, b);
+    if (r.km < 0.3) throw err(400, 'too_close'); if (r.km > 150) throw err(400, 'too_far');
+    const prices = {}; for (const c of CLASSES) prices[c] = priceFor(c, r.km, r.min);
+    return { distance_km: round1(r.km), duration_min: Math.round(r.min), prices, geometry: r.geometry };
+  }
+
+  /* поездки пассажира */
+  if (is('POST', /^\/api\/rides$/)) {
+    need(); const a = pt(body.pickup, true), b = pt(body.drop, true);
+    if (!CLASSES.includes(body.car_class)) throw err(400, 'bad_class');
+    const boost = body.boost === undefined ? 0 : body.boost; if (!Number.isInteger(boost) || boost < 0 || boost > 500 || boost % 50) throw err(400, 'bad_boost');
+    if (activeOf(user.id, 'passenger_id')) throw err(409, 'active_ride_exists');
+    const r0 = routeOf(a, b); if (r0.km < 0.3) throw err(400, 'too_close'); if (r0.km > 150) throw err(400, 'too_far');
+    const ride = { id: db.nextId++, passenger_id: user.id, driver_id: null, status: 'searching', pickup: a, drop: b, distance_km: r0.km, duration_min: r0.min, car_class: body.car_class,
+      price: priceFor(body.car_class, r0.km, r0.min) + boost, boost, comment: body.comment ? (str(body.comment, 0, 200) ?? '') : '', created_at: now(), bot: 'driver', next_at: now() + 5000 / SP() };
+    db.rides.push(ride); save(); return { ride: rideView(ride, user.id) };
+  }
+  if (is('GET', /^\/api\/rides\/active$/)) { need(); const a = activeOf(user.id, 'passenger_id'); return { ride: a ? rideView(a, user.id) : null }; }
+  if (is('GET', /^\/api\/rides$/)) {
+    need(); const f = q.get('role') === 'driver' ? 'driver_id' : 'passenger_id';
+    return { rides: db.rides.filter((r) => r[f] === user.id && ['completed', 'cancelled', 'expired'].includes(r.status)).sort((a, b) => b.id - a.id).slice(0, 50).map((r) => rideView(r, user.id)) };
+  }
+  if (is('POST', /^\/api\/rides\/(\d+)\/cancel$/)) {
+    need(); const r = db.rides.find((x) => x.id === Number(m[1])); if (!r) throw err(404, 'not_found');
+    if (r.passenger_id === user.id) {
+      if (!['searching', 'accepted', 'arrived'].includes(r.status)) throw err(409, 'cannot_cancel');
+      r.status = 'cancelled'; r.cancel_by = 'passenger'; save(); notifyRide(r); for (const s of sources) s.fire('offer_gone', { id: r.id }); return { ok: true };
+    }
+    if (r.driver_id === user.id) {
+      if (!['accepted', 'arrived'].includes(r.status)) throw err(409, 'cannot_cancel');
+      r.driver_id = null; r.status = r.bot === 'passenger' ? 'expired' : 'searching'; save();
+      emitUser(user.id, 'ride_update', { ride: { id: r.id, status: 'released' } }); return { ok: true };
+    }
+    throw err(403, 'forbidden');
+  }
+  if (is('POST', /^\/api\/rides\/(\d+)\/rate$/)) {
+    need(); const r = db.rides.find((x) => x.id === Number(m[1])); if (!r || r.status !== 'completed') throw err(404, 'not_found');
+    const stars = body.stars; if (!Number.isInteger(stars) || stars < 1 || stars > 5) throw err(400, 'bad_stars');
+    if (r.passenger_id === user.id) { if (r.rating_for_driver != null) throw err(409, 'already_rated'); r.rating_for_driver = stars; }
+    else if (r.driver_id === user.id) { if (r.rating_for_passenger != null) throw err(409, 'already_rated'); r.rating_for_passenger = stars; }
+    else throw err(403, 'forbidden');
+    save(); return { ok: true };
+  }
+
+  /* водитель */
+  if (is('POST', /^\/api\/driver\/apply$/)) {
+    need(); const ex = db.drivers[user.id]; if (ex && !['draft', 'rejected'].includes(ex.status)) throw err(409, 'already_applied');
+    const make = str(body.car_make, 2, 30), model = str(body.car_model, 1, 30), plate = str(body.plate, 5, 12), city = CITIES.includes(body.city) ? body.city : null;
+    if (!make || !model || !plate || !city) throw err(400, 'bad_request');
+    if (!Number.isInteger(body.car_year) || body.car_year < 2005 || body.car_year > new Date().getFullYear() + 1) throw err(400, 'bad_year');
+    if (!COLORS.includes(body.car_color)) throw err(400, 'bad_color'); if (!CLASSES.includes(body.car_class)) throw err(400, 'bad_class');
+    const pl = plate.toUpperCase().replace(/\s+/g, ''); if (!/^[0-9A-ZА-Я]{5,10}$/.test(pl)) throw err(400, 'bad_plate');
+    db.drivers[user.id] = { user_id: user.id, city, car_make: make, car_model: model, car_year: body.car_year, car_color: body.car_color, plate: pl, car_class: body.car_class, status: 'draft', reject_reason: '', face_reject_reason: '', approved_at: null, face_valid_until: 0, online: false, lat: null, lng: null, challenge: String(1000 + Math.floor(Math.random() * 9000)) };
+    save(); return { driver: driverView(db.drivers[user.id]) };
+  }
+  if (is('GET', /^\/api\/driver\/verification$/)) {
+    need(); const d = db.drivers[user.id]; if (!d) throw err(404, 'not_a_driver');
+    return { driver: driverView(d), challenge: d.challenge, required: REQUIRED, face_check_hours: db.settings.face_check_hours };
+  }
+  if (is('POST', /^\/api\/driver\/verification$/)) {
+    need(); const d = db.drivers[user.id]; if (!d) throw err(404, 'not_a_driver');
+    const kind = body.kind;
+    if (kind === 'registration') { if (!['draft', 'rejected', 'pending'].includes(d.status)) throw err(409, 'wrong_state'); }
+    else if (kind === 'face') { if (d.status !== 'approved') throw err(409, 'wrong_state'); } else throw err(400, 'bad_request');
+    if (body.consent !== true) throw err(400, 'consent_required');
+    const images = {};
+    for (const k of REQUIRED[kind]) {
+      const v = body.images && body.images[k];
+      if (typeof v !== 'string' || !v.startsWith('data:image/jpeg;base64,')) throw err(400, 'bad_image', { key: k });
+      const s = await shrink(v); if (!s) throw err(400, 'bad_image', { key: k }); images[k] = s;
+    }
+    db.queue = db.queue.filter((x) => x.driverId !== user.id);
+    db.queue.push({ id: 'q' + db.nextId++, driverId: user.id, kind, challenge: d.challenge, createdAt: now(), keys: REQUIRED[kind], images });
+    if (kind === 'registration') { d.status = 'pending'; d.reject_reason = ''; } else d.face_reject_reason = '';
+    save(); emitAdmins('queue', { size: db.queue.length });
+    return { ok: true, driver: driverView(d) };
+  }
+  if (is('POST', /^\/api\/driver\/online$/)) {
+    need(); const d = db.drivers[user.id]; if (!d) throw err(404, 'not_a_driver');
+    if (body.online === false) { d.online = false; save(); return { driver: driverView(d) }; }
+    if (d.status !== 'approved') throw err(403, 'not_approved'); if (d.face_valid_until <= now()) throw err(403, 'face_check_required');
+    const lat = Number(body.lat), lng = Number(body.lng); if (!inKz(lat, lng)) throw err(400, 'location_required');
+    d.online = true; d.lat = lat; d.lng = lng; d.next_offer_at = now() + 5000 / SP(); save();
+    return { driver: driverView(d), offers: db.rides.filter((r) => r.bot === 'passenger' && r.status === 'searching').map((r) => offerView(r, d)) };
+  }
+  if (is('POST', /^\/api\/driver\/location$/)) { need(); const d = db.drivers[user.id]; if (!d || !d.online) throw err(409, 'not_online'); return { ok: true }; }
+  if (is('GET', /^\/api\/driver\/offers$/)) {
+    need(); const d = db.drivers[user.id];
+    return { offers: d && d.online && d.status === 'approved' && !activeOf(user.id, 'driver_id') ? db.rides.filter((r) => r.status === 'searching' && r.passenger_id !== user.id && SERVES[d.car_class].includes(r.car_class) && r.bot === 'passenger').map((r) => offerView(r, d)) : [] };
+  }
+  if (is('GET', /^\/api\/driver\/stats$/)) {
+    need(); if (!db.drivers[user.id]) throw err(404, 'not_a_driver');
+    const sod = new Date(); sod.setHours(0, 0, 0, 0); const base = sod.getTime();
+    const agg = (since) => { const rs = db.rides.filter((r) => r.driver_id === user.id && r.status === 'completed' && r.finished_at >= since); return { rides: rs.length, earned: rs.reduce((s, r) => s + r.price, 0) }; };
+    return { today: agg(base), week: agg(base - 6 * DAY), month: agg(base - 29 * DAY), total_rides: db.rides.filter((r) => r.driver_id === user.id && r.status === 'completed').length, commission_percent: db.settings.commission_percent };
+  }
+  const drvGuard = () => { need(); const d = db.drivers[user.id]; if (!d || d.status !== 'approved') throw err(403, 'not_approved'); return d; };
+  if (is('POST', /^\/api\/rides\/(\d+)\/accept$/)) {
+    const d = drvGuard(); if (!d.online) throw err(409, 'not_online'); if (d.face_valid_until <= now()) throw err(403, 'face_check_required');
+    if (activeOf(user.id, 'driver_id')) throw err(409, 'active_ride_exists');
+    const r = db.rides.find((x) => x.id === Number(m[1])); if (!r) throw err(404, 'not_found');
+    if (r.passenger_id === user.id) throw err(400, 'own_ride'); if (!SERVES[d.car_class].includes(r.car_class)) throw err(403, 'wrong_class');
+    if (r.status !== 'searching') throw err(409, 'ride_taken');
+    r.status = 'accepted'; r.driver_id = user.id; r.accepted_at = now(); r.bot = r.bot === 'passenger' ? 'passenger' : null; save(); notifyRide(r);
+    for (const s of sources) s.fire('offer_gone', { id: r.id });
+    return { ride: rideView(r, user.id) };
+  }
+  for (const [name, from, to, stamp] of [['arrived', 'accepted', 'arrived', 'arrived_at'], ['start', 'arrived', 'in_progress', 'started_at'], ['complete', 'in_progress', 'completed', 'finished_at']]) {
+    if (is('POST', new RegExp(`^/api/rides/(\\d+)/${name}$`))) {
+      need(); const r = db.rides.find((x) => x.id === Number(m[1])); if (!r || r.driver_id !== user.id) throw err(404, 'not_found'); if (r.status !== from) throw err(409, 'wrong_state');
+      r.status = to; r[stamp] = now(); const d = db.drivers[user.id]; if (to === 'completed') d.next_offer_at = now() + 20000 / SP(); save(); notifyRide(r); return { ride: rideView(r, user.id) };
+    }
+  }
+
+  /* админ-панель */
+  const brief = (id) => { const u = db.users[id], d = db.drivers[id]; return { name: u?.name, phone: u?.phone, car: d ? `${d.car_make} ${d.car_model} ${d.car_year}, ${d.car_color}` : '', plate: d?.plate, car_class: d?.car_class, city: d?.city }; };
+  if (is('GET', /^\/api\/admin\/verifications$/)) {
+    needAdmin();
+    return { items: db.queue.slice().sort((a, b) => a.createdAt - b.createdAt).map((x) => {
+      const imgs = x.images || (phCache[x.id] = phCache[x.id] || Object.fromEntries(x.keys.map((k) => [k, demoPhoto(LABELS[k] + ' · ' + (db.users[x.driverId]?.name || ''))])));
+      return { id: x.id, driverId: x.driverId, kind: x.kind, challenge: x.challenge, createdAt: x.createdAt, keys: x.keys, driver: brief(x.driverId), demoImages: imgs };
+    }) };
+  }
+  if (is('POST', /^\/api\/admin\/verifications\/([^/]+)\/decision$/)) {
+    needAdmin(); const x = db.queue.find((q2) => q2.id === m[1]); if (!x) throw err(404, 'not_found');
+    const d = db.drivers[x.driverId], approve = body.approve === true, reason = approve ? '' : str(body.reason, 3, 200);
+    if (!approve && !reason) throw err(400, 'reason_required');
+    if (approve) { if (x.kind === 'registration') { d.status = 'approved'; d.approved_at = now(); } d.face_valid_until = now() + db.settings.face_check_hours * 3600e3; d.reject_reason = ''; d.face_reject_reason = ''; }
+    else if (x.kind === 'registration') { d.status = 'rejected'; d.reject_reason = reason; } else d.face_reject_reason = reason;
+    db.queue = db.queue.filter((q2) => q2.id !== x.id); delete phCache[x.id]; save();
+    emitUser(x.driverId, 'verification', { driver: driverView(d) }); emitAdmins('queue', { size: db.queue.length });
+    return { ok: true, driver: driverView(d) };
+  }
+  if (is('GET', /^\/api\/admin\/drivers$/)) {
+    needAdmin();
+    return { drivers: Object.values(db.drivers).map((d) => ({ id: d.user_id, name: db.users[d.user_id].name, phone: db.users[d.user_id].phone, blocked: false, ...driverView(d), rides: db.rides.filter((r) => r.driver_id === d.user_id && r.status === 'completed').length })) };
+  }
+  if (is('POST', /^\/api\/admin\/drivers\/(\d+)\/status$/)) {
+    needAdmin(); const d = db.drivers[Number(m[1])]; if (!d) throw err(404, 'not_found');
+    if (body.status === 'suspended') { d.status = 'suspended'; d.online = false; } else if (body.status === 'approved') { if (!d.approved_at) throw err(409, 'never_approved'); d.status = 'approved'; } else throw err(400, 'bad_request');
+    save(); emitUser(d.user_id, 'verification', { driver: driverView(d) }); return { ok: true };
+  }
+  if (is('POST', /^\/api\/admin\/drivers\/(\d+)\/face-reset$/)) {
+    needAdmin(); const d = db.drivers[Number(m[1])]; if (!d) throw err(404, 'not_found');
+    d.face_valid_until = 0; d.online = false; save(); emitUser(d.user_id, 'face_required', { driver: driverView(d) }); return { ok: true };
+  }
+  if (is('GET', /^\/api\/admin\/rides$/)) {
+    needAdmin();
+    return { rides: db.rides.slice().sort((a, b) => b.id - a.id).slice(0, 100).map((r) => ({ ...rideView(r, -1), passenger_name: db.users[r.passenger_id]?.name, driver_name: r.driver_id ? db.users[r.driver_id]?.name : null, rating_for_driver: r.rating_for_driver ?? null, rating_for_passenger: r.rating_for_passenger ?? null })) };
+  }
+  if (is('GET', /^\/api\/admin\/stats$/)) {
+    needAdmin(); const sod = new Date(); sod.setHours(0, 0, 0, 0); const b = sod.getTime(), ds = Object.values(db.drivers);
+    return { users: Object.keys(db.users).length, drivers_approved: ds.filter((d) => d.status === 'approved').length, drivers_online: ds.filter((d) => d.online).length, drivers_pending: ds.filter((d) => d.status === 'pending').length,
+      rides_today: db.rides.filter((r) => r.created_at >= b).length, rides_completed_today: db.rides.filter((r) => r.status === 'completed' && r.finished_at >= b).length, queue: db.queue.length };
+  }
+  if (is('GET', /^\/api\/admin\/settings$/)) { needAdmin(); return { ...db.settings }; }
+  if (is('PUT', /^\/api\/admin\/settings$/)) {
+    needAdmin(); const ok = (v, lo, hi) => typeof v === 'number' && Number.isFinite(v) && v >= lo && v <= hi;
+    if (body.face_check_hours !== undefined) { if (!ok(body.face_check_hours, 1, 168)) throw err(400, 'bad_value'); db.settings.face_check_hours = body.face_check_hours; }
+    if (body.commission_percent !== undefined) { if (!ok(body.commission_percent, 0, 30)) throw err(400, 'bad_value'); db.settings.commission_percent = body.commission_percent; }
+    if (body.offer_radius_km !== undefined) { if (!ok(body.offer_radius_km, 1, 50)) throw err(400, 'bad_value'); db.settings.offer_radius_km = body.offer_radius_km; }
+    if (body.tariffs !== undefined) {
+      const t2 = {}; for (const c of CLASSES) { const x = body.tariffs?.[c]; if (!x || !ok(x.base, 0, 20000) || !ok(x.per_km, 0, 5000) || !ok(x.per_min, 0, 1000) || !ok(x.min, 0, 50000)) throw err(400, 'bad_value'); t2[c] = { base: x.base, per_km: x.per_km, per_min: x.per_min, min: x.min }; }
+      db.settings.tariffs = t2;
+    }
+    save(); return { ok: true };
+  }
+  throw err(404, 'not_found');
+}
+
+const realFetch = window.fetch.bind(window);
+window.fetch = async (input, opts = {}) => {
+  const url = typeof input === 'string' ? input : input.url;
+  if (!url || !url.startsWith('/api/')) return realFetch(input, opts);
+  const u = new URL(url, 'http://x'), method = (opts.method || 'GET').toUpperCase();
+  const isAdmin = new Headers(opts.headers || {}).get('X-Demo-Admin') === '1';
+  let body = {}; if (opts.body) { try { body = JSON.parse(opts.body); } catch { /* пусто */ } }
+  await new Promise((r) => setTimeout(r, 90));
+  const json = (status, obj) => new Response(JSON.stringify(obj), { status, headers: { 'Content-Type': 'application/json' } });
+  try { return json(200, (await route(method, u.pathname, u.searchParams, body, isAdmin)) ?? { ok: true }); }
+  catch (e) { if (e && e.http) return json(e.http, { error: e.code, ...(e.extra || {}) }); console.error(e); return json(500, { error: 'server_error' }); }
+};
+
+/* ---------- геолокация: пассажир и водитель находятся у Байтерека ---------- */
+const here = () => ({ coords: { latitude: 51.1285, longitude: 71.4302, accuracy: 20 } });
+Object.defineProperty(navigator, 'geolocation', { configurable: true, value: { getCurrentPosition: (ok) => setTimeout(() => ok(here()), 250), watchPosition: (ok) => { setTimeout(() => ok(here()), 400); return 1; }, clearWatch() {} } });
+
+/* ---------- упрощённая карта вместо Leaflet ---------- */
+const mercY = (lat) => Math.log(Math.tan(Math.PI / 4 + (lat * Math.PI) / 360)) * 180 / Math.PI;
+const unMercY = (y) => (2 * Math.atan(Math.exp((y * Math.PI) / 180)) - Math.PI / 2) * 180 / Math.PI;
+class DMap {
+  constructor(el) {
+    this.el = el; this.h = {}; this.items = new Set(); this.cx = 71.47; this.cy = mercY(51.16); this.s = 0.0005;
+    el.classList.add('dmap');
+    this.bg = document.createElement('div'); this.bg.className = 'dmap-bg';
+    this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); this.svg.setAttribute('class', 'dmap-svg');
+    this.lay = document.createElement('div'); this.lay.className = 'dmap-lay';
+    const tag = document.createElement('div'); tag.className = 'dmap-tag'; tag.textContent = 'Схема района (демо). В боевой версии здесь карта OpenStreetMap';
+    el.append(this.bg, this.svg, this.lay, tag);
+    let drag = null;
+    el.addEventListener('pointerdown', (e) => { if (e.target.closest('.dmap-zoom')) return; drag = { x: e.clientX, y: e.clientY, cx: this.cx, cy: this.cy, moved: false }; });
+    window.addEventListener('pointermove', (e) => { if (!drag) return; const dx = e.clientX - drag.x, dy = e.clientY - drag.y; if (Math.abs(dx) + Math.abs(dy) > 6) drag.moved = true; if (drag.moved) { this.cx = drag.cx - dx * this.s; this.cy = drag.cy + dy * this.s; this.redraw(); } });
+    window.addEventListener('pointerup', (e) => {
+      if (!drag) return; const was = drag; drag = null;
+      if (!was.moved && el.contains(e.target) && !e.target.closest('.dmap-zoom')) { const r = el.getBoundingClientRect(); this.emit('click', { latlng: this.toLatLng(e.clientX - r.left, e.clientY - r.top) }); }
+    });
+    this.ro = new ResizeObserver(() => this.redraw()); this.ro.observe(el);
+    requestAnimationFrame(() => this.redraw());
+  }
+  size() { return [this.el.clientWidth || 360, this.el.clientHeight || 260]; }
+  toLatLng(px, py) { const [W, H] = this.size(); return { lat: unMercY(this.cy - (py - H / 2) * this.s), lng: this.cx + (px - W / 2) * this.s }; }
+  toPx(lat, lng) { const [W, H] = this.size(); return [(lng - this.cx) / this.s + W / 2, H / 2 - (mercY(lat) - this.cy) / this.s]; }
+  on(n, f) { (this.h[n] = this.h[n] || []).push(f); return this; }
+  emit(n, e) { (this.h[n] || []).forEach((f) => f(e)); }
+  setView(c, z = 12) { const [W] = this.size(); this.cx = c[1]; this.cy = mercY(c[0]); this.s = (360 / 2 ** z) / 256; this.redraw(); return this; }
+  fitBounds(pts, o = {}) {
+    const [W, H] = this.size(), p = (o.padding || [20])[0], xs = pts.map((q) => q[1]), ys = pts.map((q) => mercY(q[0]));
+    const dx = Math.max(...xs) - Math.min(...xs), dy = Math.max(...ys) - Math.min(...ys);
+    this.cx = (Math.max(...xs) + Math.min(...xs)) / 2; this.cy = (Math.max(...ys) + Math.min(...ys)) / 2;
+    this.s = Math.max(dx / Math.max(40, W - 2 * p), dy / Math.max(40, H - 2 * p), 0.00004); this.redraw(); return this;
+  }
+  zoomBy(d) { this.s *= 2 ** -d; this.redraw(); }
+  add(it) { this.items.add(it); this.redraw(); }
+  del(it) { this.items.delete(it); it.el?.remove(); this.redraw(); }
+  redraw() {
+    const [W, H] = this.size(); this.svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    this.svg.replaceChildren();
+    const grid = 70, ox = ((-this.cx / this.s) % grid + grid) % grid, oy = ((this.cy / this.s) % grid + grid) % grid;
+    this.bg.style.backgroundPosition = `${ox}px ${oy}px, ${ox}px ${oy}px, 0 0`;
+    for (const it of this.items) {
+      if (it.kind === 'marker') { const [x, y] = this.toPx(it.lat, it.lng); it.el.style.transform = `translate(${x - it.ax}px, ${y - it.ay}px)`; if (!it.el.isConnected) this.lay.append(it.el); }
+      else if (it.kind === 'line') {
+        const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+        pl.setAttribute('points', it.coords.map(([lng, lat]) => this.toPx(lat, lng).join(',')).join(' ')); pl.setAttribute('fill', 'none'); pl.setAttribute('stroke', it.color); pl.setAttribute('stroke-width', '5'); pl.setAttribute('stroke-linejoin', 'round'); pl.setAttribute('stroke-linecap', 'round'); pl.setAttribute('opacity', '.9');
+        this.svg.append(pl);
+      }
+    }
+  }
+  remove() { this.ro.disconnect(); this.el.replaceChildren(); this.el.classList.remove('dmap'); }
+}
+window.L = {
+  map: (el) => new DMap(el),
+  tileLayer: () => ({ addTo() { return this; } }),
+  control: { zoom: () => ({ addTo(map) {
+    const box = document.createElement('div'); box.className = 'dmap-zoom';
+    for (const [t, d] of [['+', 1], ['−', -1]]) { const b = document.createElement('button'); b.type = 'button'; b.textContent = t; b.setAttribute('aria-label', d > 0 ? 'Приблизить' : 'Отдалить'); b.onclick = () => map.zoomBy(d); box.append(b); }
+    map.el.append(box); return this;
+  } }) },
+  divIcon: (o) => o,
+  marker: (ll, o) => {
+    const it = { kind: 'marker', lat: ll[0], lng: ll[1], ax: o.icon.iconAnchor[0], ay: o.icon.iconAnchor[1], el: document.createElement('div'), map: null };
+    it.el.className = 'dmap-pin'; it.el.innerHTML = o.icon.html;
+    return { addTo(m) { it.map = m; m.add(it); return this; }, setLatLng(p) { it.lat = p[0]; it.lng = p[1]; it.map?.redraw(); return this; }, remove() { it.map?.del(it); } };
+  },
+  geoJSON: (g, o) => {
+    const it = { kind: 'line', coords: g.coordinates, color: o?.style?.color || '#1B7FD3', map: null };
+    return { addTo(m) { it.map = m; m.add(it); return this; }, remove() { it.map?.del(it); } };
+  },
+};
+
+window.__demoReset = () => { ls.del(KEY); ls.del(SKEY); ls.del(AKEY); try { localStorage.removeItem('lang'); } catch { /* ok */ } location.reload(); };
+})();
+
+</script>
+<script>
+(function () {
+'use strict';
+// Тексты интерфейса: русский (основной) и казахский. Отсутствующий ключ берётся из русского.
+const DICT = {
+  ru: {
+    'tab.order': 'Заказ', 'tab.trips': 'Поездки', 'tab.drive': 'Водителю', 'tab.profile': 'Профиль',
+    'common.loading': 'Загрузка…', 'common.refresh': 'Обновить',
+    'time.expired': 'истекла', 'time.left': 'осталось {h} ч {m} мин', 'rating.new': 'новый', 'pay.cash': 'наличными',
+    'map.fail': 'Карта не загрузилась. Проверьте интернет и обновите страницу.',
+
+    'land.badge': 'Казахстан · оплата наличными',
+    'land.h1a': 'Такси по Казахстану,', 'land.h1b': 'без лишних комиссий',
+    'land.lead': 'KUKA TAXI соединяет пассажиров и проверенных водителей в городах Казахстана. Фиксированная цена до поездки, оплата водителю наличными.',
+    'land.cta.pass': 'Заказать такси', 'land.cta.drv': 'Стать водителем',
+    'land.card.t': 'Коротко о сервисе', 'land.card.pay': 'Оплата', 'land.card.pay.v': 'наличными',
+    'land.card.com': 'Комиссия с водителей', 'land.card.com.v': '0% на старте', 'land.card.min': 'Минимальная поездка',
+    'land.card.face': 'Сверка водителя', 'land.card.face.v': 'каждые {h} ч',
+    'land.pass.t': 'Для пассажиров',
+    'land.pass.1.t': 'Цена видна заранее', 'land.pass.1.d': 'Вы выбираете тариф и видите сумму до заказа. Во время поездки она не меняется.',
+    'land.pass.2.t': 'Проверенные водители', 'land.pass.2.d': 'Каждого водителя вручную проверяет администратор: документы, права и лицо.',
+    'land.pass.3.t': 'Рейтинг и безопасность', 'land.pass.3.d': 'Оценки после каждой поездки, данные водителя и авто, кнопка экстренных служб.',
+    'land.drv.t': 'Для водителей',
+    'land.drv.1.t': 'Без комиссии на старте', 'land.drv.1.d': 'Вся сумма поездки остаётся вам. Если условия изменятся, мы предупредим заранее.',
+    'land.drv.2.t': 'Документы не хранятся', 'land.drv.2.d': 'Фото видит только администратор во время проверки и сразу после решения они удаляются.',
+    'land.drv.3.t': 'Сами выбираете график', 'land.drv.3.d': 'Выходите на линию, когда удобно. Заказы приходят рядом с вами.',
+    'land.cities': 'Города', 'land.foot': 'KUKA TAXI · Казахстан',
+
+    'login.enter': 'Войти', 'login.title': 'Вход', 'login.sub': 'Демо-вход: введите любой номер, затем код входа.',
+    'login.phone': 'Номер телефона', 'login.getcode': 'Получить код в WhatsApp',
+    'login.legal': 'Продолжая, вы соглашаетесь с обработкой номера телефона и имени для работы сервиса.',
+    'login.code.title': 'Введите код', 'login.code.sub': 'Введите код входа. В демо сообщения в WhatsApp не отправляются.', 'login.code': 'Код из WhatsApp',
+    'login.name': 'Как вас зовут', 'login.name.ph': 'Имя и фамилия', 'login.confirm': 'Подтвердить',
+    'login.resend': 'Отправить код снова', 'login.resend.in': 'Повтор через {s} с', 'login.change': 'Другой номер',
+
+    'order.title': 'Куда поедем?', 'order.from': 'Откуда', 'order.to': 'Куда', 'order.find': 'Найти', 'order.locate': 'Где я',
+    'order.here': 'Моё местоположение', 'order.tap.from': 'Нажмите на карту, чтобы указать место посадки', 'order.tap.to': 'Нажмите на карту, чтобы указать, куда ехать',
+    'order.nores': 'Ничего не нашли. Уточните адрес или отметьте точку на карте.', 'order.calc': 'Считаем маршрут…',
+    'order.dist': '{km} км · около {min} мин', 'order.cash': 'наличными', 'order.boost': 'Добавить к цене, чтобы найти водителя быстрее',
+    'order.boost.none': 'Без добавки', 'order.comment': 'Комментарий водителю', 'order.comment.ph': 'Подъезд, этаж, ориентир',
+    'order.go': 'Заказать · {price}', 'order.cash.note': 'Оплата наличными водителю по окончании поездки.',
+    'cls.economy': 'Эконом', 'cls.economy.d': 'Недорого, 4 места', 'cls.comfort': 'Комфорт', 'cls.comfort.d': 'Новее авто, больше места',
+    'cls.business': 'Бизнес', 'cls.business.d': 'Премиальные авто', 'cls.minivan': 'Минивэн', 'cls.minivan.d': 'До 6 пассажиров',
+
+    'ride.searching': 'Ищем водителя', 'ride.searching.d': 'Обычно это занимает несколько минут. Ищем:',
+    'ride.accepted': 'Водитель едет к вам', 'ride.arrived': 'Водитель на месте', 'ride.inprogress': 'Вы в пути',
+    'ride.arrived.toast': 'Водитель приехал', 'ride.call': 'Позвонить', 'ride.cancel': 'Отменить поездку',
+    'ride.cancelled': 'Поездка отменена', 'ride.expired': 'Водитель не нашёлся. Попробуйте ещё раз или добавьте к цене.',
+    'ride.driver.cancelled': 'Водитель отказался, ищем другого', 'ride.pay.cash': 'Оплата наличными', 'ride.sos': 'Экстренные службы:',
+    'rate.title': 'Оценка', 'rate.done': 'Поездка завершена', 'rate.cash.pay': 'Оплатите водителю наличными: {price}', 'rate.cash.get': 'Получите наличными: {price}',
+    'rate.q.drv': 'Как вам поездка с водителем {name}?', 'rate.q.pass': 'Как вам пассажир {name}?', 'rate.comment': 'Комментарий (по желанию)',
+    'rate.send': 'Отправить оценку', 'rate.skip': 'Пропустить', 'rate.thanks': 'Спасибо за оценку',
+
+    'trips.title': 'Мои поездки', 'trips.asp': 'Как пассажир', 'trips.asd': 'Как водитель', 'trips.empty': 'Поездок пока нет.',
+    'trips.myrate': 'Ваша оценка', 'trips.norate': 'Без оценки',
+    'st.searching': 'поиск', 'st.accepted': 'водитель едет', 'st.arrived': 'на месте', 'st.in_progress': 'в пути', 'st.completed': 'завершена', 'st.cancelled': 'отменена', 'st.expired': 'без водителя',
+    'dst.draft': 'анкета', 'dst.pending': 'на проверке', 'dst.approved': 'допущен', 'dst.rejected': 'отклонён', 'dst.suspended': 'приостановлен',
+
+    'profile.title': 'Профиль', 'profile.name': 'Имя', 'profile.save': 'Сохранить', 'profile.saved': 'Сохранено', 'profile.logout': 'Выйти',
+    'profile.as.pass': 'Рейтинг пассажира', 'profile.as.drv': 'Рейтинг водителя', 'profile.driver': 'Режим водителя', 'profile.open.drive': 'Открыть',
+    'profile.become': 'Хочу работать водителем', 'profile.privacy.t': 'Конфиденциальность',
+    'profile.privacy.d': 'Фото документов водителей не сохраняются на сервере: их видит администратор во время проверки, затем они удаляются. Телефон показывается только водителю и пассажиру в активной поездке.',
+    'profile.support': 'Поддержка:',
+
+    'apply.title': 'Анкета водителя', 'apply.sub': 'Укажите данные автомобиля. Следующим шагом пройдёте проверку документов.', 'apply.next': 'Далее: проверка',
+    'apply.city': 'Город', 'apply.make': 'Марка', 'apply.model': 'Модель', 'apply.year': 'Год выпуска', 'apply.color': 'Цвет', 'apply.plate': 'Госномер', 'apply.class': 'Класс авто',
+    'ver.title': 'Проверка документов',
+    'ver.intro': 'Сфотографируйте документы. Их вручную проверит администратор и допустит вас к работе. Фото не сохраняются: они удаляются сразу после решения.',
+    'ver.code.t': 'Ваш код на сегодня', 'ver.code.d': 'Напишите этот код крупно на листе бумаги и держите лист рядом с лицом на селфи.',
+    'doc.selfie_with_id': 'Селфи с удостоверением', 'doc.selfie_with_id.h': 'Лицо, удостоверение личности и лист с кодом в одном кадре',
+    'doc.id_front': 'Удостоверение: лицевая', 'doc.id_front.h': 'Лицевая сторона удостоверения личности',
+    'doc.id_back': 'Удостоверение: оборот', 'doc.id_back.h': 'Оборотная сторона',
+    'doc.license_front': 'Права: лицевая', 'doc.license_front.h': 'Водительское удостоверение, лицевая сторона',
+    'doc.license_back': 'Права: оборот', 'doc.license_back.h': 'Водительское удостоверение, оборот',
+    'doc.tech_passport': 'Техпаспорт', 'doc.tech_passport.h': 'Свидетельство о регистрации автомобиля',
+    'doc.car_photo': 'Фото автомобиля', 'doc.car_photo.h': 'Авто спереди, номер хорошо виден',
+    'ver.tips': 'Снимайте при хорошем свете, без бликов. Все данные на документах должны читаться.',
+    'ver.consent': 'Я согласен на передачу фото администратору для ручной проверки. Мне известно, что фото не хранятся и удаляются после решения.',
+    'ver.send': 'Отправить на проверку', 'ver.sent': 'Отправлено на проверку', 'ver.expired': 'Прошлая заявка устарела. Отправьте фото ещё раз.',
+    'ver.rejected': 'Не пройдено. Причина: {reason}',
+    'ver.wait.t': 'Проверка идёт', 'ver.wait.d': 'Администратор проверяет ваши документы. Это может занять некоторое время.', 'ver.wait.sent': 'Отправлено: {time}',
+    'ver.wait.keep': 'Мы сообщим в WhatsApp и в приложении. Если решения долго нет, отправьте фото заново.',
+    'face.title': 'Проверка лица', 'face.why': 'Каждые {h} часов нужно подтверждать, что за рулём именно вы. Сделайте селфи с удостоверением и листом с кодом.',
+    'face.card.t': 'Проверка лица', 'face.card.until': 'Действует до {time}', 'face.card.expired': 'Срок вышел. Пройдите проверку, чтобы выйти на линию.',
+    'face.go': 'Пройти проверку лица', 'face.pending': 'Селфи отправлено, ждём решения администратора.',
+
+    'drv.title': 'Водитель', 'drv.online': 'На линии', 'drv.online.on': 'Вы на линии', 'drv.online.off': 'Вы не на линии',
+    'drv.offers': 'Заказы рядом', 'drv.offers.none': 'Пока нет заказов. Мы сообщим звуком, когда появится.', 'drv.accept': 'Принять · {price}',
+    'drv.offer.meta': '{km} км · {min} мин · до клиента {to} км', 'drv.current': 'Текущая поездка', 'drv.cash.get': 'Получить наличными',
+    'drv.nav': 'Навигатор', 'drv.arrived': 'Я на месте', 'drv.start': 'Начать поездку', 'drv.complete': 'Завершить поездку', 'drv.release': 'Отказаться от заказа',
+    'drv.nocomm': 'Комиссия сервиса: {p}%. Вся сумма поездки остаётся водителю.',
+    'drv.suspended': 'Доступ приостановлен', 'drv.suspended.d': 'Свяжитесь с поддержкой, чтобы узнать причину.',
+    'drv.toast.approved': 'Проверка пройдена. Можно выходить на линию.', 'drv.toast.rejected': 'Проверка не пройдена', 'drv.toast.updated': 'Статус обновлён',
+    'drv.toast.face': 'Нужна проверка лица', 'drv.toast.pcancel': 'Пассажир отменил заказ',
+    'stat.today': 'Сегодня', 'stat.week': '7 дней', 'stat.month': '30 дней', 'stat.rides': '{n} поездок',
+
+    'err.generic': 'Что-то пошло не так. Попробуйте ещё раз.', 'err.bad_phone': 'Введите казахстанский номер: +7 7XX XXX XX XX',
+    'err.too_many_requests': 'Слишком много попыток. Подождите немного.', 'err.cooldown': 'Код уже отправлен. Подождите перед повтором.',
+    'err.send_failed': 'Не удалось отправить код в WhatsApp. Попробуйте позже.', 'err.code_expired': 'Код устарел. Запросите новый.',
+    'err.too_many_attempts': 'Слишком много неверных вводов. Запросите новый код.', 'err.wrong_code': 'Неверный код.', 'err.name_required': 'Укажите имя.',
+    'err.blocked': 'Доступ закрыт.', 'err.unauthorized': 'Войдите снова.', 'err.bad_request': 'Проверьте заполненные поля.',
+    'err.already_applied': 'Анкета уже отправлена.', 'err.bad_year': 'Год выпуска от 2005.', 'err.bad_color': 'Выберите цвет.', 'err.bad_class': 'Выберите класс.', 'err.bad_plate': 'Проверьте госномер.',
+    'err.wrong_state': 'Действие сейчас недоступно.', 'err.consent_required': 'Нужно согласие на передачу фото.', 'err.bad_image': 'Фото не подошло. Сделайте снимок ещё раз.',
+    'err.too_large': 'Фото слишком большие.', 'err.queue_full': 'Очередь проверки переполнена, попробуйте позже.',
+    'err.not_approved': 'Вы ещё не допущены к работе.', 'err.face_check_required': 'Нужно пройти проверку лица.',
+    'err.location_required': 'Не удалось определить местоположение.', 'err.location_denied': 'Разрешите доступ к геолокации в настройках браузера.',
+    'err.not_online': 'Вы не на линии.', 'err.out_of_country': 'Сервис работает только на территории Казахстана.', 'err.bad_point': 'Проверьте точку на карте.',
+    'err.bad_address': 'Укажите адрес.', 'err.too_close': 'Слишком короткая поездка.', 'err.too_far': 'Слишком далеко для заказа.',
+    'err.active_ride_exists': 'У вас уже есть активная поездка.', 'err.ride_taken': 'Заказ уже принял другой водитель.', 'err.own_ride': 'Нельзя принять свой заказ.',
+    'err.wrong_class': 'Этот класс авто вам не подходит.', 'err.not_found': 'Не найдено.', 'err.cannot_cancel': 'Сейчас отменить нельзя.',
+    'err.bad_stars': 'Выберите оценку от 1 до 5.', 'err.already_rated': 'Вы уже оценили эту поездку.', 'err.rating_closed': 'Срок для оценки прошёл.',
+    'err.geo_unavailable': 'Поиск адреса недоступен. Отметьте точку на карте.', 'err.forbidden': 'Нет доступа.', 'err.payload_too_large': 'Файл слишком большой.',
+    'err.bad_boost': 'Неверная добавка к цене.', 'err.not_a_driver': 'Сначала заполните анкету водителя.',
+    'err.reason_required': 'Укажите причину.', 'err.never_approved': 'Водитель ещё не проходил проверку.', 'err.bad_value': 'Недопустимое значение.',
+  },
+
+  kk: {
+    'tab.order': 'Тапсырыс', 'tab.trips': 'Сапарлар', 'tab.drive': 'Жүргізушіге', 'tab.profile': 'Профиль',
+    'common.loading': 'Жүктелуде…', 'common.refresh': 'Жаңарту',
+    'time.expired': 'мерзімі өтті', 'time.left': '{h} сағ {m} мин қалды', 'rating.new': 'жаңа', 'pay.cash': 'қолма-қол',
+    'map.fail': 'Карта жүктелмеді. Интернетті тексеріп, бетті жаңартыңыз.',
+
+    'land.badge': 'Қазақстан · қолма-қол төлем',
+    'land.h1a': 'Қазақстан бойынша такси,', 'land.h1b': 'артық комиссиясыз',
+    'land.lead': 'KUKA TAXI Қазақстан қалаларындағы жолаушылар мен тексерілген жүргізушілерді байланыстырады. Баға сапарға дейін белгілі, төлем жүргізушіге қолма-қол.',
+    'land.cta.pass': 'Такси шақыру', 'land.cta.drv': 'Жүргізуші болу',
+    'land.card.t': 'Қызмет туралы қысқаша', 'land.card.pay': 'Төлем', 'land.card.pay.v': 'қолма-қол',
+    'land.card.com': 'Жүргізушілерден комиссия', 'land.card.com.v': 'басында 0%', 'land.card.min': 'Ең төменгі сапар',
+    'land.card.face': 'Жүргізушіні тексеру', 'land.card.face.v': 'әр {h} сағат сайын',
+    'land.pass.t': 'Жолаушыларға',
+    'land.pass.1.t': 'Баға алдын ала көрінеді', 'land.pass.1.d': 'Тарифті таңдап, тапсырыс алдында соманы көресіз. Сапар кезінде баға өзгермейді.',
+    'land.pass.2.t': 'Тексерілген жүргізушілер', 'land.pass.2.d': 'Әр жүргізушіні әкімші қолмен тексереді: құжаттар, куәлік және жүз.',
+    'land.pass.3.t': 'Рейтинг және қауіпсіздік', 'land.pass.3.d': 'Әр сапардан кейін баға, жүргізуші мен көлік деректері, жедел қызметтерге шақыру түймесі.',
+    'land.drv.t': 'Жүргізушілерге',
+    'land.drv.1.t': 'Басында комиссиясыз', 'land.drv.1.d': 'Сапардың бүкіл сомасы өзіңізде қалады. Шарттар өзгерсе, алдын ала ескертеміз.',
+    'land.drv.2.t': 'Құжаттар сақталмайды', 'land.drv.2.d': 'Фотосуретті тек әкімші тексеру кезінде көреді, шешімнен кейін бірден жойылады.',
+    'land.drv.3.t': 'Кестені өзіңіз таңдайсыз', 'land.drv.3.d': 'Ыңғайлы кезде желіге шығыңыз. Тапсырыстар жақын жерден келеді.',
+    'land.cities': 'Қалалар', 'land.foot': 'KUKA TAXI · Қазақстан',
+
+    'login.enter': 'Кіру', 'login.title': 'Кіру', 'login.sub': 'Демо-кіру: кез келген нөмірді, содан кейін кіру кодын енгізіңіз.',
+    'login.phone': 'Телефон нөмірі', 'login.getcode': 'WhatsApp-қа код алу',
+    'login.legal': 'Жалғастыру арқылы қызмет жұмысы үшін телефон нөмірі мен атыңызды өңдеуге келісесіз.',
+    'login.code.title': 'Кодты енгізіңіз', 'login.code.sub': 'Кіру кодын енгізіңіз. Демода WhatsApp хабарламалары жіберілмейді.', 'login.code': 'WhatsApp кодын',
+    'login.name': 'Атыңыз кім', 'login.name.ph': 'Аты-жөні', 'login.confirm': 'Растау',
+    'login.resend': 'Кодты қайта жіберу', 'login.resend.in': '{s} с кейін қайталау', 'login.change': 'Басқа нөмір',
+
+    'order.title': 'Қайда барамыз?', 'order.from': 'Қайдан', 'order.to': 'Қайда', 'order.find': 'Іздеу', 'order.locate': 'Мен қайдамын',
+    'order.here': 'Менің орным', 'order.tap.from': 'Отыратын жерді көрсету үшін картаны басыңыз', 'order.tap.to': 'Баратын жерді көрсету үшін картаны басыңыз',
+    'order.nores': 'Ештеңе табылмады. Мекенжайды нақтылаңыз немесе картадан белгілеңіз.', 'order.calc': 'Маршрут есептелуде…',
+    'order.dist': '{km} км · шамамен {min} мин', 'order.cash': 'қолма-қол', 'order.boost': 'Жүргізушіні тезірек табу үшін бағаға қосу',
+    'order.boost.none': 'Қосымшасыз', 'order.comment': 'Жүргізушіге пікір', 'order.comment.ph': 'Кіреберіс, қабат, бағдар',
+    'order.go': 'Тапсырыс беру · {price}', 'order.cash.note': 'Сапар соңында жүргізушіге қолма-қол төлейсіз.',
+    'cls.economy': 'Эконом', 'cls.economy.d': 'Үнемді, 4 орын', 'cls.comfort': 'Комфорт', 'cls.comfort.d': 'Жаңа көлік, кеңірек',
+    'cls.business': 'Бизнес', 'cls.business.d': 'Премиум көліктер', 'cls.minivan': 'Минивэн', 'cls.minivan.d': '6 жолаушыға дейін',
+
+    'ride.searching': 'Жүргізуші ізделуде', 'ride.searching.d': 'Әдетте бірнеше минут алады. Іздеу уақыты:',
+    'ride.accepted': 'Жүргізуші сізге келе жатыр', 'ride.arrived': 'Жүргізуші жетті', 'ride.inprogress': 'Жолдасыз',
+    'ride.arrived.toast': 'Жүргізуші келді', 'ride.call': 'Қоңырау шалу', 'ride.cancel': 'Сапарды бас тарту',
+    'ride.cancelled': 'Сапар бас тартылды', 'ride.expired': 'Жүргізуші табылмады. Қайта көріңіз немесе бағаға қосыңыз.',
+    'ride.driver.cancelled': 'Жүргізуші бас тартты, басқасын іздеп жатырмыз', 'ride.pay.cash': 'Қолма-қол төлем', 'ride.sos': 'Жедел қызметтер:',
+    'rate.title': 'Баға', 'rate.done': 'Сапар аяқталды', 'rate.cash.pay': 'Жүргізушіге қолма-қол төлеңіз: {price}', 'rate.cash.get': 'Қолма-қол алыңыз: {price}',
+    'rate.q.drv': '{name} жүргізушімен сапар қалай өтті?', 'rate.q.pass': '{name} жолаушы қалай?', 'rate.comment': 'Пікір (қалауыңызша)',
+    'rate.send': 'Бағаны жіберу', 'rate.skip': 'Өткізіп жіберу', 'rate.thanks': 'Бағаңыз үшін рахмет',
+
+    'trips.title': 'Менің сапарларым', 'trips.asp': 'Жолаушы ретінде', 'trips.asd': 'Жүргізуші ретінде', 'trips.empty': 'Әзірге сапар жоқ.',
+    'trips.myrate': 'Сіздің бағаңыз', 'trips.norate': 'Бағасыз',
+    'st.searching': 'іздеу', 'st.accepted': 'жүргізуші келе жатыр', 'st.arrived': 'жетті', 'st.in_progress': 'жолда', 'st.completed': 'аяқталды', 'st.cancelled': 'бас тартылды', 'st.expired': 'жүргізушісіз',
+    'dst.draft': 'анкета', 'dst.pending': 'тексерілуде', 'dst.approved': 'жіберілді', 'dst.rejected': 'қабылданбады', 'dst.suspended': 'тоқтатылған',
+
+    'profile.title': 'Профиль', 'profile.name': 'Аты', 'profile.save': 'Сақтау', 'profile.saved': 'Сақталды', 'profile.logout': 'Шығу',
+    'profile.as.pass': 'Жолаушы рейтингі', 'profile.as.drv': 'Жүргізуші рейтингі', 'profile.driver': 'Жүргізуші режимі', 'profile.open.drive': 'Ашу',
+    'profile.become': 'Жүргізуші болғым келеді', 'profile.privacy.t': 'Құпиялылық',
+    'profile.privacy.d': 'Жүргізушілердің құжат фотолары серверде сақталмайды: оларды тексеру кезінде әкімші көреді, содан кейін жойылады. Телефон тек белсенді сапарда жүргізуші мен жолаушыға көрінеді.',
+    'profile.support': 'Қолдау:',
+
+    'apply.title': 'Жүргізуші анкетасы', 'apply.sub': 'Көлік деректерін көрсетіңіз. Келесі қадамда құжаттарды тексеруден өтесіз.', 'apply.next': 'Әрі қарай: тексеру',
+    'apply.city': 'Қала', 'apply.make': 'Маркасы', 'apply.model': 'Моделі', 'apply.year': 'Шығарылған жылы', 'apply.color': 'Түсі', 'apply.plate': 'Мемлекеттік нөмір', 'apply.class': 'Көлік класы',
+    'ver.title': 'Құжаттарды тексеру',
+    'ver.intro': 'Құжаттарды суретке түсіріңіз. Оларды әкімші қолмен тексеріп, жұмысқа жібереді. Фотолар сақталмайды: шешімнен кейін бірден жойылады.',
+    'ver.code.t': 'Бүгінгі кодыңыз', 'ver.code.d': 'Осы кодты қағазға ірі етіп жазып, селфиде бетіңіздің жанында ұстаңыз.',
+    'doc.selfie_with_id': 'Куәлікпен селфи', 'doc.selfie_with_id.h': 'Бет, жеке куәлік және код жазылған қағаз бір кадрда',
+    'doc.id_front': 'Куәлік: алдыңғы беті', 'doc.id_front.h': 'Жеке куәліктің алдыңғы беті',
+    'doc.id_back': 'Куәлік: артқы беті', 'doc.id_back.h': 'Артқы беті',
+    'doc.license_front': 'Жүргізуші куәлігі: алдыңғы беті', 'doc.license_front.h': 'Жүргізуші куәлігінің алдыңғы беті',
+    'doc.license_back': 'Жүргізуші куәлігі: артқы беті', 'doc.license_back.h': 'Жүргізуші куәлігінің артқы беті',
+    'doc.tech_passport': 'Техпаспорт', 'doc.tech_passport.h': 'Көлікті тіркеу куәлігі',
+    'doc.car_photo': 'Көліктің фотосы', 'doc.car_photo.h': 'Көлік алдынан, нөмірі анық көрінеді',
+    'ver.tips': 'Жарық жерде, шағылысусыз түсіріңіз. Құжаттағы барлық деректер оқылуы керек.',
+    'ver.consent': 'Фотоларды қолмен тексеру үшін әкімшіге беруге келісемін. Фотолар сақталмайтынын және шешімнен кейін жойылатынын білемін.',
+    'ver.send': 'Тексеруге жіберу', 'ver.sent': 'Тексеруге жіберілді', 'ver.expired': 'Алдыңғы өтінім ескірді. Фотоларды қайта жіберіңіз.',
+    'ver.rejected': 'Өтпеді. Себебі: {reason}',
+    'ver.wait.t': 'Тексеру жүріп жатыр', 'ver.wait.d': 'Әкімші құжаттарыңызды тексеріп жатыр. Біраз уақыт кетуі мүмкін.', 'ver.wait.sent': 'Жіберілді: {time}',
+    'ver.wait.keep': 'Нәтижені WhatsApp-пен және қосымшада хабарлаймыз. Шешім ұзақ болмаса, фотоларды қайта жіберіңіз.',
+    'face.title': 'Жүзді тексеру', 'face.why': 'Әр {h} сағат сайын рөлде дәл өзіңіз екеніңізді растау керек. Куәлікпен және код жазылған қағазбен селфи жасаңыз.',
+    'face.card.t': 'Жүзді тексеру', 'face.card.until': '{time} дейін жарамды', 'face.card.expired': 'Мерзімі өтті. Желіге шығу үшін тексеруден өтіңіз.',
+    'face.go': 'Жүзді тексеруден өту', 'face.pending': 'Селфи жіберілді, әкімшінің шешімін күтіңіз.',
+
+    'drv.title': 'Жүргізуші', 'drv.online': 'Желіде', 'drv.online.on': 'Сіз желідесіз', 'drv.online.off': 'Сіз желіде емессіз',
+    'drv.offers': 'Жақын тапсырыстар', 'drv.offers.none': 'Әзірге тапсырыс жоқ. Пайда болса, дыбыспен хабарлаймыз.', 'drv.accept': 'Қабылдау · {price}',
+    'drv.offer.meta': '{km} км · {min} мин · клиентке дейін {to} км', 'drv.current': 'Ағымдағы сапар', 'drv.cash.get': 'Қолма-қол алу',
+    'drv.nav': 'Навигатор', 'drv.arrived': 'Мен жеттім', 'drv.start': 'Сапарды бастау', 'drv.complete': 'Сапарды аяқтау', 'drv.release': 'Тапсырыстан бас тарту',
+    'drv.nocomm': 'Қызмет комиссиясы: {p}%. Сапардың бүкіл сомасы жүргізушіде қалады.',
+    'drv.suspended': 'Қолжетімділік тоқтатылған', 'drv.suspended.d': 'Себебін білу үшін қолдау қызметіне хабарласыңыз.',
+    'drv.toast.approved': 'Тексеруден өттіңіз. Желіге шыға аласыз.', 'drv.toast.rejected': 'Тексеруден өтпедіңіз', 'drv.toast.updated': 'Мәртебе жаңартылды',
+    'drv.toast.face': 'Жүзді тексеру керек', 'drv.toast.pcancel': 'Жолаушы тапсырыстан бас тартты',
+    'stat.today': 'Бүгін', 'stat.week': '7 күн', 'stat.month': '30 күн', 'stat.rides': '{n} сапар',
+
+    'err.generic': 'Бірдеңе дұрыс болмады. Қайталап көріңіз.', 'err.bad_phone': 'Қазақстан нөмірін енгізіңіз: +7 7XX XXX XX XX',
+    'err.too_many_requests': 'Тым көп әрекет. Біраз күтіңіз.', 'err.cooldown': 'Код жіберілген. Қайталау алдында күтіңіз.',
+    'err.send_failed': 'Кодты WhatsApp-қа жіберу мүмкін болмады. Кейінірек көріңіз.', 'err.code_expired': 'Кодтың мерзімі өтті. Жаңасын сұраңыз.',
+    'err.too_many_attempts': 'Қате енгізу тым көп. Жаңа код сұраңыз.', 'err.wrong_code': 'Код қате.', 'err.name_required': 'Атыңызды көрсетіңіз.',
+    'err.blocked': 'Қолжетімділік жабық.', 'err.unauthorized': 'Қайта кіріңіз.', 'err.bad_request': 'Толтырылған өрістерді тексеріңіз.',
+    'err.already_applied': 'Анкета жіберіліп қойған.', 'err.bad_year': 'Шығарылған жылы 2005-тен бастап.', 'err.bad_color': 'Түсін таңдаңыз.', 'err.bad_class': 'Классты таңдаңыз.', 'err.bad_plate': 'Мемлекеттік нөмірді тексеріңіз.',
+    'err.wrong_state': 'Бұл әрекет қазір қолжетімсіз.', 'err.consent_required': 'Фотоларды беруге келісім қажет.', 'err.bad_image': 'Фото жарамсыз. Қайта түсіріңіз.',
+    'err.too_large': 'Фотолар тым үлкен.', 'err.queue_full': 'Тексеру кезегі толып кетті, кейінірек көріңіз.',
+    'err.not_approved': 'Сіз әлі жұмысқа жіберілмегенсіз.', 'err.face_check_required': 'Жүзді тексеруден өту керек.',
+    'err.location_required': 'Орналасқан жерді анықтау мүмкін болмады.', 'err.location_denied': 'Браузер баптауларынан геолокацияға рұқсат беріңіз.',
+    'err.not_online': 'Сіз желіде емессіз.', 'err.out_of_country': 'Қызмет тек Қазақстан аумағында жұмыс істейді.', 'err.bad_point': 'Картадағы нүктені тексеріңіз.',
+    'err.bad_address': 'Мекенжайды көрсетіңіз.', 'err.too_close': 'Сапар тым қысқа.', 'err.too_far': 'Тапсырыс үшін тым алыс.',
+    'err.active_ride_exists': 'Сізде белсенді сапар бар.', 'err.ride_taken': 'Тапсырысты басқа жүргізуші қабылдады.', 'err.own_ride': 'Өз тапсырысыңызды қабылдай алмайсыз.',
+    'err.wrong_class': 'Бұл көлік класы сізге сәйкес келмейді.', 'err.not_found': 'Табылмады.', 'err.cannot_cancel': 'Қазір бас тарту мүмкін емес.',
+    'err.bad_stars': '1-ден 5-ке дейін баға таңдаңыз.', 'err.already_rated': 'Бұл сапарды бағалап қойғансыз.', 'err.rating_closed': 'Бағалау мерзімі өтті.',
+    'err.geo_unavailable': 'Мекенжай іздеу қолжетімсіз. Картадан нүктені белгілеңіз.', 'err.forbidden': 'Рұқсат жоқ.', 'err.payload_too_large': 'Файл тым үлкен.',
+    'err.bad_boost': 'Бағаға қосымша дұрыс емес.', 'err.not_a_driver': 'Алдымен жүргізуші анкетасын толтырыңыз.',
+    'err.reason_required': 'Себебін көрсетіңіз.', 'err.never_approved': 'Жүргізуші әлі тексеруден өтпеген.', 'err.bad_value': 'Жарамсыз мән.',
+  },
+};
+
+
+// Пустые значения (null/false) не должны превращаться в текст "null".
+for (const m of ['replaceChildren', 'append', 'prepend']) {
+  const orig = Element.prototype[m];
+  Element.prototype[m] = function (...kids) { return orig.apply(this, kids.flat(Infinity).filter((k) => k != null && k !== false)); };
+}
+
+/* ---------------------------------------------------------------- утилиты */
+const L = window.L;
+let lang = 'ru';
+{
+  const nav = (navigator.language || '').startsWith('kk') ? 'kk' : 'ru';
+  try { const saved = localStorage.getItem('lang'); lang = saved === 'kk' || saved === 'ru' ? saved : nav; } catch { lang = nav; }
+}
+document.documentElement.lang = lang;
+
+function t(key, vars) {
+  let s = DICT[lang]?.[key] ?? DICT.ru[key] ?? key;
+  if (vars) for (const [k, v] of Object.entries(vars)) s = s.replaceAll(`{${k}}`, v);
+  return s;
+}
+const errText = (code) => DICT[lang]?.['err.' + code] ?? DICT.ru['err.' + code] ?? t('err.generic');
+
+function h(tag, props, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (k === 'for') el.setAttribute('for', v);
+    else if (k === 'style') el.setAttribute('style', v);
+    else if (['value', 'checked', 'disabled', 'type', 'placeholder', 'href', 'id', 'name', 'maxLength', 'inputMode', 'autocomplete', 'rows', 'accept', 'min', 'max', 'step', 'required'].includes(k)) el[k] = v;
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat(Infinity)) {
+    if (kid == null || kid === false) continue;
+    el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  }
+  return el;
+}
+const svg = (inner, vb = '0 0 24 24') => { const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); s.setAttribute('viewBox', vb); s.setAttribute('fill', 'none'); s.setAttribute('stroke', 'currentColor'); s.setAttribute('stroke-width', '2'); s.setAttribute('stroke-linecap', 'round'); s.setAttribute('stroke-linejoin', 'round'); s.setAttribute('aria-hidden', 'true'); s.innerHTML = inner; return s; };
+const ICONS = {
+  car: '<path d="M5 17h14M6 17l1.5-5h9L18 17M5 17v2M19 17v2M8 13h8"/><circle cx="8" cy="17" r="1"/><circle cx="16" cy="17" r="1"/>',
+  list: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+  wheel: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2"/><path d="M12 3v7M5 16l6-3M19 16l-6-3"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',
+};
+
+const money = (n) => `${Math.round(n).toLocaleString('ru-RU')} ₸`;
+const tz = 'Asia/Almaty';
+const fmtDT = (ms) => new Intl.DateTimeFormat(lang === 'kk' ? 'kk-KZ' : 'ru-RU', { timeZone: tz, day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(ms);
+const fmtTime = (ms) => new Intl.DateTimeFormat('ru-RU', { timeZone: tz, hour: '2-digit', minute: '2-digit' }).format(ms);
+function fmtLeft(ms) {
+  if (ms <= 0) return t('time.expired');
+  const m = Math.floor(ms / 60000);
+  return t('time.left', { h: Math.floor(m / 60), m: m % 60 });
+}
+const stars = (n) => '★'.repeat(Math.round(n || 0)) + '☆'.repeat(5 - Math.round(n || 0));
+const ratingText = (r, c) => (r == null ? t('rating.new') : `${r.toFixed(1)} (${c})`);
+
+function toast(msg) {
+  document.querySelector('.toast')?.remove();
+  const el = h('div', { class: 'toast', role: 'status' }, msg);
+  document.body.append(el);
+  setTimeout(() => el.remove(), 3800);
+}
+
+function modal(content, { dismissible = true } = {}) {
+  const back = h('div', { class: 'modal-back', role: 'dialog', 'aria-modal': 'true' }, h('div', { class: 'modal' }, content));
+  const close = () => { back.remove(); document.removeEventListener('keydown', esc); };
+  const esc = (e) => { if (e.key === 'Escape' && dismissible) close(); };
+  if (dismissible) back.addEventListener('click', (e) => { if (e.target === back) close(); });
+  document.addEventListener('keydown', esc);
+  document.body.append(back);
+  return close;
+}
+
+/* ---------------------------------------------------------------- API */
+const S = {
+  cfg: null, user: null, driver: null, activeRide: null, activeDrive: null,
+  offers: [], stats: null, es: null, timers: [], map: null, watchId: null, lastLocPost: 0, pos: null, finished: null,
+};
+
+async function api(method, path, body) {
+  const res = await fetch(path, {
+    method,
+    headers: { 'X-KUKA': '1', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  let data = null;
+  try { data = await res.json(); } catch { /* пустой ответ */ }
+  if (!res.ok) {
+    const e = new Error(data?.error || 'generic');
+    e.code = data?.error || 'generic'; e.status = res.status; e.data = data;
+    if (res.status === 401 && S.user && !path.startsWith('/api/auth')) { S.user = null; closeStream(); location.hash = '#/login'; route(); }
+    throw e;
+  }
+  return data;
+}
+const guard = (btn, fn) => async (...a) => {
+  if (btn?.disabled) return;
+  if (btn) btn.disabled = true;
+  try { await fn(...a); } catch (e) { toast(errText(e.code)); } finally { if (btn) btn.disabled = false; }
+};
+
+function every(ms, fn) { const id = setInterval(fn, ms); S.timers.push(id); return id; }
+function cleanup() {
+  S.timers.forEach(clearInterval); S.timers = [];
+  if (S.map) { S.map.remove(); S.map = null; }
+}
+
+/* ---------------------------------------------------------------- старт */
+async function loadMe() {
+  try {
+    const me = await api('GET', '/api/me');
+    S.user = me.user; S.driver = me.driver; S.activeRide = me.active_ride; S.activeDrive = me.active_drive;
+    if (S.user.lang !== lang) { /* язык интерфейса выбирает сам человек на этом устройстве */ }
+    return true;
+  } catch { S.user = null; return false; }
+}
+
+async function boot() {
+  try { S.cfg = await api('GET', '/api/config'); } catch { S.cfg = { face_check_hours: 34, commission_percent: 0, tariffs: {}, support_phone: '' }; }
+  if (await loadMe()) openStream();
+  if (!location.hash) location.hash = '#/';
+  route();
+}
+window.addEventListener('hashchange', route);
+
+function route() {
+  cleanup();
+  const path = location.hash.replace(/^#/, '').split('?')[0] || '/';
+  if (!S.user) return path === '/login' ? loginView() : landingView();
+  if (path === '/login') { location.hash = '#/'; return; }
+  const views = { '/': passengerView, '/trips': tripsView, '/drive': driverView, '/profile': profileView };
+  (views[path] || passengerView)();
+}
+
+function mount(...nodes) { const app = document.getElementById('app'); app.replaceChildren(...nodes); window.scrollTo(0, 0); }
+
+function shell(active, ...children) {
+  const tabs = [['/', 'tab.order', 'car'], ['/trips', 'tab.trips', 'list'], ['/drive', 'tab.drive', 'wheel'], ['/profile', 'tab.profile', 'user']];
+  const bar = h('div', { class: 'tabbar' }, h('nav', { 'aria-label': 'Меню' },
+    tabs.map(([href, label, icon]) => h('a', { href: '#' + href, 'aria-current': active === href ? 'page' : null }, svg(ICONS[icon]), t(label)))));
+  mount(h('main', { class: 'shell' }, ...children), bar);
+}
+
+function setLang(l) {
+  lang = l; document.documentElement.lang = l;
+  try { localStorage.setItem('lang', l); } catch { /* ok */ }
+  if (S.user) api('PATCH', '/api/me', { lang: l }).catch(() => {});
+  route();
+}
+const langToggle = () => h('button', { class: 'langbtn', onclick: () => setLang(lang === 'ru' ? 'kk' : 'ru'), 'aria-label': 'Language' }, lang === 'ru' ? 'ҚАЗ' : 'РУС');
+const logo = () => h('a', { class: 'logo', href: '#/' }, 'KUKA', h('small', null, 'TAXI'));
+
+/* ---------------------------------------------------------------- лендинг */
+const CITY_LIST = ['Астана', 'Алматы', 'Шымкент', 'Караганда', 'Актобе', 'Атырау', 'Павлодар', 'Усть-Каменогорск', 'Семей', 'Костанай', 'Петропавловск', 'Актау', 'Тараз', 'Кызылорда', 'Уральск', 'Туркестан', 'Талдыкорган', 'Кокшетау', 'Темиртау'];
+
+function landingView() {
+  const tf = S.cfg?.tariffs?.economy;
+  mount(h('div', { class: 'land' },
+    h('header', { class: 'topbar' }, logo(), h('div', { class: 'row' }, langToggle(), h('a', { class: 'btn small dark', href: '#/login' }, t('login.enter')))),
+    h('section', { class: 'hero' },
+      h('div', { class: 'col gap20' },
+        h('span', { class: 'pill' }, t('land.badge')),
+        h('h1', null, t('land.h1a'), ' ', h('em', null, t('land.h1b'))),
+        h('p', { class: 'muted', style: 'font-size:18px;max-width:46ch' }, t('land.lead')),
+        h('div', { class: 'row wrap' },
+          h('a', { class: 'btn primary', href: '#/login' }, t('land.cta.pass')),
+          h('a', { class: 'btn', href: '#/login?driver' , }, t('land.cta.drv')))),
+      h('div', { class: 'hero-card' },
+        h('h3', null, t('land.card.t')),
+        h('div', { class: 'rowx' }, h('span', null, t('land.card.pay')), h('b', null, t('land.card.pay.v'))),
+        h('div', { class: 'rowx' }, h('span', null, t('land.card.com')), h('b', null, t('land.card.com.v'))),
+        h('div', { class: 'rowx' }, h('span', null, t('land.card.min')), h('b', null, tf ? money(tf.min) : '—')),
+        h('div', { class: 'rowx' }, h('span', null, t('land.card.face')), h('b', null, t('land.card.face.v', { h: S.cfg?.face_check_hours ?? 34 }))))),
+    h('section', { class: 'col gap20' }, h('h2', null, t('land.pass.t')),
+      h('div', { class: 'grid3' }, [1, 2, 3].map((i) => h('div', { class: 'card feat' }, h('b', null, t(`land.pass.${i}.t`)), h('p', { class: 'muted' }, t(`land.pass.${i}.d`)))))),
+    h('section', { class: 'col gap20' }, h('h2', null, t('land.drv.t')),
+      h('div', { class: 'grid3' }, [1, 2, 3].map((i) => h('div', { class: 'card feat' }, h('b', null, t(`land.drv.${i}.t`)), h('p', { class: 'muted' }, t(`land.drv.${i}.d`)))))),
+    h('section', { class: 'col' }, h('h2', null, t('land.cities')), h('div', { class: 'cities' }, CITY_LIST.map((c) => h('span', null, c)))),
+    h('footer', { class: 'muted small' }, t('land.foot'), S.cfg?.support_phone ? ` · ${S.cfg.support_phone}` : '')));
+}
+
+/* ---------------------------------------------------------------- вход по коду из WhatsApp */
+function loginView() {
+  let phone = ''; let isNew = false; let countdown = 0;
+  const box = h('div', { class: 'card col' });
+  const wrap = h('div', { class: 'shell', style: 'padding-bottom:40px' },
+    h('header', { class: 'topbar' }, logo(), langToggle()), box);
+  mount(wrap);
+
+  const tick = () => { if (countdown > 0) { countdown--; const b = document.getElementById('resend'); if (b) { b.textContent = countdown ? t('login.resend.in', { s: countdown }) : t('login.resend'); b.disabled = countdown > 0; } } };
+  every(1000, tick);
+
+  function stepPhone(msg = '') {
+    const inp = h('input', { class: 'input', id: 'phone', type: 'tel', inputMode: 'tel', autocomplete: 'tel-national', placeholder: '701 234 56 78', value: phone.replace('+7', ''), 'aria-label': t('login.phone') });
+    const err = h('div', { class: 'err', role: 'alert' }, msg);
+    const btn = h('button', { class: 'btn primary block' }, t('login.getcode'));
+    const send = async () => {
+      if (btn.disabled) return;
+      btn.disabled = true; err.textContent = '';
+      let digits = inp.value.replace(/\D/g, '');
+      if (digits.length === 11 && /^[78]/.test(digits)) digits = digits.slice(1);
+      phone = '+7' + digits;
+      try {
+        const r = await api('POST', '/api/auth/request', { phone, lang });
+        isNew = r.new_user; countdown = r.retry_after;
+        stepCode(r.dev_code);
+      } catch (e) {
+        if (e.code === 'cooldown') { isNew = false; countdown = e.data?.retry_after || 60; err.textContent = ''; stepCode(); return; }
+        err.textContent = errText(e.code); btn.disabled = false;
+      }
+    };
+    btn.onclick = send;
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+    box.replaceChildren(
+      h('h2', null, t('login.title')), h('p', { class: 'muted' }, t('login.sub')),
+      h('label', { class: 'f', for: 'phone' }, t('login.phone'), h('div', { class: 'row gap8' }, h('b', { style: 'font-size:18px' }, '+7'), inp)),
+      err, btn, h('p', { class: 'muted small' }, t('login.legal')));
+    inp.focus();
+  }
+
+  function stepCode(devCode) {
+    const code = h('input', { class: 'input code-input', id: 'code', inputMode: 'numeric', autocomplete: 'one-time-code', maxLength: 6, placeholder: '••••••', 'aria-label': t('login.code') });
+    const name = isNew ? h('input', { class: 'input', id: 'uname', autocomplete: 'name', maxLength: 40, placeholder: t('login.name.ph') }) : null;
+    const err = h('div', { class: 'err', role: 'alert' });
+    const btn = h('button', { class: 'btn primary block' }, t('login.confirm'));
+    const resend = h('button', { class: 'btn small', id: 'resend', disabled: countdown > 0 }, countdown ? t('login.resend.in', { s: countdown }) : t('login.resend'));
+    const verify = async () => {
+      btn.disabled = true; err.textContent = '';
+      try {
+        await api('POST', '/api/auth/verify', { phone, code: code.value.trim(), name: name?.value.trim(), lang });
+        await loadMe(); openStream();
+        const to = S.afterLogin || '/'; S.afterLogin = null;
+        location.hash = '#' + to; route();
+      } catch (e) { err.textContent = errText(e.code); btn.disabled = false; }
+    };
+    btn.onclick = verify;
+    code.addEventListener('input', () => { if (code.value.replace(/\D/g, '').length === (window.__DEMO__ ? 4 : 6) && (!name || name.value.trim().length > 1)) verify(); });
+    resend.onclick = () => stepPhone();
+    box.replaceChildren(
+      h('h2', null, t('login.code.title')),
+      h('p', { class: 'muted' }, t('login.code.sub', { phone })),
+      devCode ? h('div', { class: 'hint warn' }, `DEV: ${devCode}`) : null,
+      isNew ? h('label', { class: 'f', for: 'uname' }, t('login.name'), name) : null,
+      h('label', { class: 'f', for: 'code' }, t('login.code'), code),
+      err, btn, h('div', { class: 'row between' }, resend, h('button', { class: 'btn small', onclick: () => stepPhone() }, t('login.change'))));
+    (isNew ? name : code).focus();
+  }
+  if (location.hash.includes('driver')) S.afterLogin = '/drive';
+  stepPhone();
+}
+
+/* ---------------------------------------------------------------- realtime */
+function openStream() {
+  closeStream();
+  const es = new EventSource('/api/stream');
+  S.es = es;
+  const on = (name, fn) => es.addEventListener(name, (e) => { try { fn(JSON.parse(e.data)); } catch { /* битое событие */ } });
+  on('ride_update', ({ ride, notice }) => onRideUpdate(ride, notice));
+  on('driver_location', ({ ride_id, lat, lng }) => { if (S.activeRide?.id === ride_id && S.activeRide.driver) { S.activeRide.driver.lat = lat; S.activeRide.driver.lng = lng; moveCar?.(lat, lng); } });
+  on('offer', ({ offer }) => { if (!S.offers.find((o) => o.id === offer.id)) { S.offers.unshift(offer); beep(); if (currentPath() === '/drive') renderOffers?.(); } });
+  on('offer_gone', ({ id }) => { S.offers = S.offers.filter((o) => o.id !== id); if (currentPath() === '/drive') renderOffers?.(); });
+  on('verification', ({ driver }) => { S.driver = driver; toast(driver.status === 'approved' ? t('drv.toast.approved') : driver.status === 'rejected' ? t('drv.toast.rejected') : t('drv.toast.updated')); if (currentPath() === '/drive') route(); });
+  on('face_required', ({ driver }) => { S.driver = driver; stopWatch(); toast(t('drv.toast.face')); if (currentPath() === '/drive') route(); });
+}
+function closeStream() { S.es?.close(); S.es = null; }
+const currentPath = () => location.hash.replace(/^#/, '').split('?')[0] || '/';
+
+function onRideUpdate(ride, notice) {
+  const asDriver = !!ride.passenger || ride.status === 'released';
+  if (asDriver) {
+    if (ride.status === 'released') { S.activeDrive = null; }
+    else if (['completed'].includes(ride.status)) { S.activeDrive = null; S.finished = { ride, as: 'driver' }; }
+    else if (['cancelled', 'expired'].includes(ride.status)) { S.activeDrive = null; toast(t('drv.toast.pcancel')); }
+    else S.activeDrive = ride;
+    if (currentPath() === '/drive') route();
+    if (S.finished?.as === 'driver') askRating();
+    return;
+  }
+  if (notice === 'driver_cancelled') toast(t('ride.driver.cancelled'));
+  if (ride.status === 'completed') { S.activeRide = null; S.finished = { ride, as: 'passenger' }; }
+  else if (ride.status === 'cancelled') { S.activeRide = null; toast(t('ride.cancelled')); }
+  else if (ride.status === 'expired') { S.activeRide = null; toast(t('ride.expired')); }
+  else {
+    const prev = S.activeRide?.status;
+    S.activeRide = ride;
+    if (prev && prev !== ride.status) { if (ride.status === 'accepted') beep(); if (ride.status === 'arrived') { beep(); toast(t('ride.arrived.toast')); } }
+  }
+  if (currentPath() === '/') route();
+  if (S.finished?.as === 'passenger') askRating();
+}
+
+let audioCtx;
+function beep() {
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+    o.frequency.value = 880; g.gain.value = 0.08; o.connect(g); g.connect(audioCtx.destination);
+    o.start(); o.stop(audioCtx.currentTime + 0.18);
+  } catch { /* звук недоступен */ }
+}
+
+/* ---------------------------------------------------------------- карта */
+const ASTANA = [51.1605, 71.4704];
+function mkMap(el, center = ASTANA, zoom = 12) {
+  if (!L) { el.style.height = 'auto'; el.style.minHeight = '0'; el.append(h('div', { class: 'hint warn' }, t('map.fail'))); return null; }
+  const m = L.map(el, { zoomControl: false, attributionControl: true }).setView(center, zoom);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(m);
+  L.control.zoom({ position: 'topright' }).addTo(m);
+  S.map = m;
+  return m;
+}
+const pin = (cls) => L.divIcon({ className: '', html: `<div class="pin ${cls}"></div>`, iconSize: [18, 18], iconAnchor: [9, 9] });
+let moveCar = null; let renderOffers = null;
+
+function getPosition() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) return reject(Object.assign(new Error('geo'), { code: 'location_required' }));
+    navigator.geolocation.getCurrentPosition((p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
+      () => reject(Object.assign(new Error('geo'), { code: 'location_denied' })), { enableHighAccuracy: true, timeout: 12000, maximumAge: 15000 });
+  });
+}
+
+/* ---------------------------------------------------------------- пассажир: заказ */
+const order = { pickup: null, drop: null, car_class: 'economy', quote: null, boost: 0, comment: '', active: 'pickup', results: [], busy: false };
+
+function passengerView() {
+  if (S.activeRide) return rideScreen();
+  orderScreen();
+}
+
+function orderScreen() {
+  const mapEl = h('div', { class: 'map', id: 'map' });
+  const sheet = h('div', { class: 'card col' });
+  shell('/', h('header', { class: 'topbar' }, logo(), langToggle()), mapEl, sheet);
+  const map = mkMap(mapEl);
+  const markers = {}; let routeLine = null;
+
+  function drawPoints() {
+    if (!map) return;
+    for (const k of ['pickup', 'drop']) {
+      markers[k]?.remove(); markers[k] = null;
+      if (order[k]) markers[k] = L.marker([order[k].lat, order[k].lng], { icon: pin(k === 'pickup' ? 'a' : 'b') }).addTo(map);
+    }
+    routeLine?.remove(); routeLine = null;
+    if (order.quote?.geometry) routeLine = L.geoJSON(order.quote.geometry, { style: { color: '#1B7FD3', weight: 5, opacity: .85 } }).addTo(map);
+    const pts = ['pickup', 'drop'].map((k) => order[k]).filter(Boolean).map((p) => [p.lat, p.lng]);
+    if (pts.length === 2) map.fitBounds(pts, { padding: [40, 40] }); else if (pts.length === 1) map.setView(pts[0], 15);
+  }
+
+  async function setPoint(which, pt) {
+    order[which] = pt; order.results = [];
+    if (which === 'pickup' && !order.drop) order.active = 'drop';
+    order.quote = null; drawPoints(); renderSheet();
+    if (order.pickup && order.drop) {
+      try {
+        order.quote = await api('POST', '/api/quote', { pickup: order.pickup, drop: order.drop });
+        drawPoints();
+      } catch (e) { toast(errText(e.code)); }
+      renderSheet();
+    }
+  }
+
+  if (map) map.on('click', async (e) => {
+    const which = order.active;
+    const lat = e.latlng.lat, lng = e.latlng.lng;
+    let addr = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    try { addr = (await api('GET', `/api/geo/reverse?lat=${lat}&lng=${lng}`)).addr || addr; } catch (er) { if (er.code === 'out_of_country') return toast(errText(er.code)); }
+    setPoint(which, { addr, lat, lng });
+  });
+
+  async function locate() {
+    try {
+      const p = await getPosition(); S.pos = p;
+      let addr = t('order.here');
+      try { addr = (await api('GET', `/api/geo/reverse?lat=${p.lat}&lng=${p.lng}`)).addr || addr; } catch { /* оставляем подпись */ }
+      setPoint('pickup', { addr, ...p });
+    } catch (e) { toast(errText(e.code)); }
+  }
+
+  function field(which, labelKey) {
+    const inp = h('input', { class: 'input', id: 'f_' + which, placeholder: t(labelKey), value: order[which]?.addr || '', autocomplete: 'off', maxLength: 100, 'aria-label': t(labelKey) });
+    inp.addEventListener('focus', () => { order.active = which; });
+    const search = async () => {
+      const q = inp.value.trim(); if (q.length < 2) return;
+      order.active = which;
+      try { order.results = (await api('GET', `/api/geo/search?q=${encodeURIComponent(q + (/астана|алматы|шымкент|караганд/i.test(q) ? '' : ''))}`)).results; if (!order.results.length) toast(t('order.nores')); } catch (e) { toast(errText(e.code)); }
+      renderSheet(which);
+    };
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); search(); } });
+    return h('div', { class: 'fieldrow' }, h('span', { class: 'dot ' + (which === 'pickup' ? 'a' : 'b') }), h('div', { class: 'grow' }, inp),
+      h('button', { class: 'btn small', onclick: search, 'aria-label': t('order.find') }, t('order.find')));
+  }
+
+  function renderSheet(focus) {
+    const children = [h('h3', null, t('order.title'))];
+    children.push(field('pickup', 'order.from'), field('drop', 'order.to'));
+    children.push(h('div', { class: 'row wrap gap8' },
+      h('button', { class: 'btn small', onclick: locate }, t('order.locate')),
+      h('span', { class: 'muted small' }, order.active === 'pickup' ? t('order.tap.from') : t('order.tap.to'))));
+    if (order.results.length) {
+      children.push(h('div', { class: 'results', role: 'listbox' }, order.results.map((r) => h('button', { role: 'option', onclick: () => setPoint(order.active, r) }, r.addr))));
+    }
+    if (order.pickup && order.drop && !order.quote) children.push(h('p', { class: 'muted center' }, t('order.calc')));
+    if (order.quote) {
+      const q = order.quote;
+      children.push(h('div', { class: 'row between' }, h('b', null, t('order.dist', { km: q.distance_km, min: q.duration_min })), h('span', { class: 'pill' }, t('order.cash'))));
+      const names = { economy: 'cls.economy', comfort: 'cls.comfort', business: 'cls.business', minivan: 'cls.minivan' };
+      children.push(h('div', { class: 'tariffs', role: 'radiogroup' }, Object.keys(names).map((c) =>
+        h('button', { class: 'tariff', 'aria-pressed': String(order.car_class === c), onclick: () => { order.car_class = c; renderSheet(); } },
+          h('div', { class: 'grow' }, h('div', { class: 'nm' }, t(names[c])), h('div', { class: 'sub' }, t(names[c] + '.d'))),
+          h('span', { class: 'price' }, money(q.prices[c] + order.boost))))));
+      children.push(h('label', { class: 'f', for: 'boost' }, t('order.boost'),
+        h('select', { class: 'input', id: 'boost', onchange: (e) => { order.boost = Number(e.target.value); renderSheet(); } },
+          [0, 100, 200, 300, 500].map((b) => h('option', { value: b, selected: order.boost === b }, b ? `+ ${money(b)}` : t('order.boost.none'))))));
+      children.push(h('label', { class: 'f', for: 'cmt' }, t('order.comment'),
+        h('input', { class: 'input', id: 'cmt', maxLength: 200, value: order.comment, placeholder: t('order.comment.ph'), oninput: (e) => { order.comment = e.target.value; } })));
+      const go = h('button', { class: 'btn primary block' }, t('order.go', { price: money(q.prices[order.car_class] + order.boost) }));
+      go.onclick = guard(go, async () => {
+        const r = await api('POST', '/api/rides', { pickup: order.pickup, drop: order.drop, car_class: order.car_class, boost: order.boost, comment: order.comment });
+        S.activeRide = r.ride; order.quote = null; order.drop = null; order.comment = ''; order.boost = 0;
+        route();
+      });
+      children.push(go, h('p', { class: 'muted small center' }, t('order.cash.note')));
+    }
+    sheet.replaceChildren(...children);
+    if (focus) document.getElementById('f_' + focus)?.focus();
+  }
+  renderSheet();
+  drawPoints();
+  if (!order.pickup && navigator.permissions?.query) navigator.permissions.query({ name: 'geolocation' }).then((p) => { if (p.state === 'granted') locate(); }).catch(() => {});
+  if (order.pickup && order.drop && !order.quote) setPoint('drop', order.drop);
+}
+
+/* ---------------------------------------------------------------- пассажир: поездка */
+function statusSteps(status) {
+  const idx = { searching: 0, accepted: 1, arrived: 2, in_progress: 3 }[status] ?? 0;
+  return h('div', { class: 'steps', 'aria-hidden': 'true' }, [0, 1, 2, 3].map((i) => h('i', { class: i <= idx ? 'on' : '' })));
+}
+
+function rideScreen() {
+  const r = S.activeRide;
+  const mapEl = h('div', { class: 'map', id: 'map' });
+  const panel = h('div', { class: 'card col' });
+  shell('/', h('header', { class: 'topbar' }, logo(), langToggle()), mapEl, panel);
+  const map = mkMap(mapEl, [r.pickup.lat, r.pickup.lng], 14);
+  let car = null;
+  if (map) {
+    L.marker([r.pickup.lat, r.pickup.lng], { icon: pin('a') }).addTo(map);
+    L.marker([r.drop.lat, r.drop.lng], { icon: pin('b') }).addTo(map);
+    map.fitBounds([[r.pickup.lat, r.pickup.lng], [r.drop.lat, r.drop.lng]], { padding: [40, 40] });
+    if (r.driver?.lat != null) car = L.marker([r.driver.lat, r.driver.lng], { icon: pin('car') }).addTo(map);
+  }
+  moveCar = (lat, lng) => { if (!map) return; if (car) car.setLatLng([lat, lng]); else car = L.marker([lat, lng], { icon: pin('car') }).addTo(map); };
+
+  const titles = { searching: 'ride.searching', accepted: 'ride.accepted', arrived: 'ride.arrived', in_progress: 'ride.inprogress' };
+  const kids = [statusSteps(r.status), h('div', { class: 'row' }, r.status === 'searching' ? h('span', { class: 'pulse' }) : null, h('h2', null, t(titles[r.status] || 'ride.searching')))];
+  if (r.status === 'searching') {
+    const left = h('span', null, '');
+    const upd = () => { const s = Math.floor((Date.now() - r.created_at) / 1000); left.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
+    upd(); every(1000, upd);
+    kids.push(h('p', { class: 'muted' }, t('ride.searching.d'), ' ', left));
+  }
+  if (r.driver) {
+    kids.push(h('div', { class: 'card col', style: 'background:var(--paper)' },
+      h('div', { class: 'row between' }, h('b', null, r.driver.name), h('span', { class: 'stars' }, ratingText(r.driver.rating, r.driver.rating_count))),
+      h('div', { class: 'row between wrap' }, h('span', null, `${r.driver.car}, ${r.driver.color}`), h('span', { class: 'plate' }, r.driver.plate)),
+      h('a', { class: 'btn small', href: `tel:${r.driver.phone}` }, t('ride.call'), ' ', r.driver.phone)));
+  }
+  kids.push(h('div', { class: 'col gap8' },
+    h('div', { class: 'addr' }, h('span', { class: 'dot a' }), r.pickup.addr),
+    h('div', { class: 'addr' }, h('span', { class: 'dot b' }), r.drop.addr)));
+  kids.push(h('div', { class: 'row between' }, h('span', { class: 'muted' }, t('ride.pay.cash')), h('span', { class: 'price', style: 'font-size:22px' }, money(r.price))));
+  if (r.status === 'in_progress') kids.push(h('div', { class: 'hint warn' }, t('ride.sos'), ' ', h('a', { href: 'tel:112' }, '112'), ' · ', h('a', { href: 'tel:102' }, '102')));
+  if (r.status !== 'in_progress') {
+    const cancel = h('button', { class: 'btn danger block' }, t('ride.cancel'));
+    cancel.onclick = guard(cancel, async () => { await api('POST', `/api/rides/${r.id}/cancel`, {}); S.activeRide = null; toast(t('ride.cancelled')); route(); });
+    kids.push(cancel);
+  }
+  panel.replaceChildren(...kids);
+}
+
+function askRating() {
+  const f = S.finished; if (!f) return;
+  S.finished = null;
+  const asDriver = f.as === 'driver';
+  let pick = 0;
+  const comment = h('input', { class: 'input', maxLength: 300, placeholder: t('rate.comment') });
+  const starsEl = h('div', { class: 'starpick', role: 'radiogroup', 'aria-label': t('rate.title') });
+  const draw = () => starsEl.replaceChildren(...[1, 2, 3, 4, 5].map((n) => h('button', { class: n <= pick ? 'on' : '', 'aria-label': `${n}`, onclick: () => { pick = n; draw(); send.disabled = false; } }, '★')));
+  const send = h('button', { class: 'btn primary block', disabled: true }, t('rate.send'));
+  const close = modal([
+    h('h2', { class: 'center' }, t('rate.done')),
+    h('p', { class: 'center' }, asDriver ? t('rate.cash.get', { price: money(f.ride.price) }) : t('rate.cash.pay', { price: money(f.ride.price) })),
+    h('p', { class: 'muted center' }, asDriver ? t('rate.q.pass', { name: f.ride.passenger?.name || '' }) : t('rate.q.drv', { name: f.ride.driver?.name || '' })),
+    starsEl, comment, send,
+    h('button', { class: 'btn block', onclick: () => { close(); afterRate(); } }, t('rate.skip')),
+  ], { dismissible: false });
+  draw();
+  send.onclick = guard(send, async () => { await api('POST', `/api/rides/${f.ride.id}/rate`, { stars: pick, comment: comment.value.trim() }); toast(t('rate.thanks')); close(); afterRate(); });
+  function afterRate() { if (currentPath() === '/' || currentPath() === '/drive') route(); }
+}
+
+/* ---------------------------------------------------------------- история */
+async function tripsView() {
+  const isDriver = S.driver?.status === 'approved';
+  let role = 'passenger';
+  const list = h('div', { class: 'col' });
+  const seg = h('div', { class: 'row gap8' });
+  shell('/trips', h('header', { class: 'topbar' }, h('h2', null, t('trips.title')), langToggle()), seg, list);
+  async function load() {
+    seg.replaceChildren(...(isDriver ? [['passenger', 'trips.asp'], ['driver', 'trips.asd']].map(([r, k]) => h('button', { class: 'btn small' + (role === r ? ' dark' : ''), onclick: () => { role = r; load(); } }, t(k))) : []));
+    list.replaceChildren(h('p', { class: 'muted' }, t('common.loading')));
+    try {
+      const { rides } = await api('GET', `/api/rides?role=${role}`);
+      if (!rides.length) return list.replaceChildren(h('div', { class: 'card center muted' }, t('trips.empty')));
+      list.replaceChildren(...rides.map((r) => h('div', { class: 'card trip' },
+        h('div', { class: 'row between' }, h('span', { class: 'muted small' }, fmtDT(r.created_at)), h('span', { class: 'pill ' + (r.status === 'completed' ? 'ok' : 'bad') }, t('st.' + r.status))),
+        h('div', { class: 'addr' }, h('span', { class: 'dot a' }), r.pickup.addr),
+        h('div', { class: 'addr' }, h('span', { class: 'dot b' }), r.drop.addr),
+        h('div', { class: 'row between' },
+          h('span', { class: 'muted small' }, `${r.distance_km} км · ${t('pay.cash')}`),
+          h('span', { class: 'price' }, money(r.price))),
+        r.status === 'completed' ? h('div', { class: 'small muted' }, r.my_rating ? `${t('trips.myrate')}: ${stars(r.my_rating)}` : t('trips.norate')) : null)));
+    } catch (e) { list.replaceChildren(h('div', { class: 'hint bad' }, errText(e.code))); }
+  }
+  load();
+}
+
+/* ---------------------------------------------------------------- профиль */
+function profileView() {
+  const u = S.user;
+  const name = h('input', { class: 'input', id: 'pname', value: u.name, maxLength: 40 });
+  const save = h('button', { class: 'btn primary block' }, t('profile.save'));
+  save.onclick = guard(save, async () => { const r = await api('PATCH', '/api/me', { name: name.value.trim() }); S.user = { ...S.user, ...r.user }; toast(t('profile.saved')); });
+  const out = h('button', { class: 'btn danger block' }, t('profile.logout'));
+  out.onclick = guard(out, async () => { await api('POST', '/api/auth/logout', {}); S.user = null; S.driver = null; closeStream(); stopWatch(); location.hash = '#/'; route(); });
+  shell('/profile', h('header', { class: 'topbar' }, h('h2', null, t('profile.title')), langToggle()),
+    h('div', { class: 'card col' },
+      h('div', { class: 'row between' }, h('div', null, h('b', null, u.name), h('div', { class: 'muted' }, u.phone)), h('div', { class: 'center' }, h('div', { class: 'stars' }, u.rating != null ? stars(u.rating) : ''), h('div', { class: 'muted small' }, t('profile.as.pass') + ': ' + ratingText(u.rating, u.rating_count)))),
+      h('label', { class: 'f', for: 'pname' }, t('profile.name'), name), save),
+    S.driver ? h('div', { class: 'card col' },
+      h('div', { class: 'row between' }, h('b', null, t('profile.driver')), h('span', { class: 'pill ' + (S.driver.status === 'approved' ? 'ok' : S.driver.status === 'suspended' || S.driver.status === 'rejected' ? 'bad' : 'warn') }, t('dst.' + S.driver.status))),
+      h('div', { class: 'muted' }, `${S.driver.car_make} ${S.driver.car_model}, ${S.driver.plate}`),
+      h('div', { class: 'small muted' }, t('profile.as.drv') + ': ' + ratingText(S.driver.rating, S.driver.rating_count)),
+      h('a', { class: 'btn', href: '#/drive' }, t('profile.open.drive'))) : h('a', { class: 'btn block', href: '#/drive' }, t('profile.become')),
+    h('div', { class: 'card col' }, h('b', null, t('profile.privacy.t')), h('p', { class: 'muted small' }, t('profile.privacy.d')),
+      S.cfg?.support_phone ? h('p', null, t('profile.support'), ' ', h('a', { href: `tel:${S.cfg.support_phone}` }, S.cfg.support_phone)) : null),
+    out);
+}
+
+/* ---------------------------------------------------------------- водитель */
+function driverView() {
+  const d = S.driver;
+  if (!d) return driverApply();
+  if (d.status === 'draft' || d.status === 'rejected') return driverVerification('registration');
+  if (d.status === 'pending') return d.verification_pending ? driverWaiting() : driverVerification('registration', true);
+  if (d.status === 'suspended') return shell('/drive', h('div', { class: 'card col' }, h('h2', null, t('drv.suspended')), h('p', { class: 'muted' }, t('drv.suspended.d'))));
+  driverDashboard();
+}
+
+const CITIES = [...CITY_LIST, 'Другой город'];
+const COLORS = ['белый', 'чёрный', 'серый', 'серебристый', 'синий', 'красный', 'зелёный', 'жёлтый', 'коричневый', 'бежевый', 'другой'];
+
+function driverApply() {
+  const f = {};
+  const sel = (id, opts, tr) => h('select', { class: 'input', id, onchange: (e) => { f[id] = e.target.value; } }, h('option', { value: '' }, '—'), opts.map((o) => h('option', { value: o }, tr ? t(tr + o) : o)));
+  const txt = (id, ph, max = 30) => h('input', { class: 'input', id, placeholder: ph, maxLength: max, oninput: (e) => { f[id] = e.target.value; } });
+  const err = h('div', { class: 'err', role: 'alert' });
+  const btn = h('button', { class: 'btn primary block' }, t('apply.next'));
+  btn.onclick = guard(btn, async () => {
+    err.textContent = '';
+    try {
+      const r = await api('POST', '/api/driver/apply', { city: f.city, car_make: f.make, car_model: f.model, car_year: Number(f.year), car_color: f.color, plate: f.plate, car_class: f.cls });
+      S.driver = r.driver; route();
+    } catch (e) { err.textContent = errText(e.code); }
+  });
+  const label = (id, key, el) => h('label', { class: 'f', for: id }, t(key), el);
+  shell('/drive', h('header', { class: 'topbar' }, h('h2', null, t('apply.title')), langToggle()),
+    h('div', { class: 'card col' }, h('p', { class: 'muted' }, t('apply.sub')),
+      label('city', 'apply.city', sel('city', CITIES)),
+      label('make', 'apply.make', txt('make', 'Toyota')), label('model', 'apply.model', txt('model', 'Camry')),
+      label('year', 'apply.year', h('input', { class: 'input', id: 'year', inputMode: 'numeric', maxLength: 4, placeholder: '2019', oninput: (e) => { f.year = e.target.value; } })),
+      label('color', 'apply.color', sel('color', COLORS)),
+      label('plate', 'apply.plate', txt('plate', '123ABC02', 12)),
+      label('cls', 'apply.class', h('select', { class: 'input', id: 'cls', onchange: (e) => { f.cls = e.target.value; } }, h('option', { value: '' }, '—'), ['economy', 'comfort', 'business', 'minivan'].map((c) => h('option', { value: c }, t('cls.' + c))))),
+      err, btn));
+}
+
+/* Загрузка фото: уменьшаем на устройстве, хранятся только в памяти страницы и уходят на сервер одним запросом. */
+async function toJpeg(file) {
+  const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
+  const draw = (maxSide, q) => {
+    const k = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    return c.toDataURL('image/jpeg', q);
+  };
+  let out = draw(1400, 0.74);
+  if (out.length * 0.75 > 800 * 1024) out = draw(1100, 0.62);
+  bmp.close?.();
+  return out;
+}
+
+function driverVerification(kind, expired = false) {
+  const body = h('div', { class: 'col' });
+  shell('/drive', h('header', { class: 'topbar' }, h('h2', null, kind === 'face' ? t('face.title') : t('ver.title')), langToggle()), body);
+  body.append(h('p', { class: 'muted' }, t('common.loading')));
+  api('GET', '/api/driver/verification').then(({ challenge, required, driver }) => {
+    S.driver = driver;
+    const keys = required[kind];
+    const imgs = {};
+    const tiles = keys.map((k) => {
+      const cap = h('span', { class: 'cap' }, t('doc.' + k));
+      const inp = h('input', { type: 'file', accept: 'image/*', 'aria-label': t('doc.' + k) });
+      if (k === 'selfie_with_id') inp.setAttribute('capture', 'user');
+      const tile = h('label', { class: 'tile' }, h('span', { class: 'small muted' }, t('doc.' + k + '.h')), cap, inp);
+      inp.addEventListener('change', async () => {
+        const file = inp.files[0]; if (!file) return;
+        try {
+          const url = await toJpeg(file);
+          imgs[k] = url; tile.classList.add('done');
+          tile.querySelector('img')?.remove(); tile.prepend(h('img', { src: url, alt: t('doc.' + k) }));
+          refresh();
+        } catch { toast(t('err.bad_image')); }
+        inp.value = '';
+      });
+      tile._set = (url) => { imgs[k] = url; tile.classList.add('done'); tile.querySelector('img')?.remove(); tile.prepend(h('img', { src: url, alt: t('doc.' + k) })); refresh(); };
+      return tile;
+    });
+    const consent = h('input', { type: 'checkbox', id: 'consent' });
+    const err = h('div', { class: 'err', role: 'alert' });
+    const send = h('button', { class: 'btn primary block', disabled: true }, t('ver.send'));
+    const refresh = () => { send.disabled = !(keys.every((k) => imgs[k]) && consent.checked); };
+    consent.addEventListener('change', refresh);
+    send.onclick = guard(send, async () => {
+      err.textContent = '';
+      try {
+        const r = await api('POST', '/api/driver/verification', { kind, consent: true, images: imgs });
+        for (const k of Object.keys(imgs)) delete imgs[k]; // фото больше нигде не лежат
+        S.driver = r.driver; toast(t('ver.sent')); route();
+      } catch (e) { err.textContent = errText(e.code) + (e.data?.key ? `: ${t('doc.' + e.data.key)}` : ''); }
+    });
+    const rej = kind === 'registration' ? driver.reject_reason : driver.face_reject_reason;
+    body.replaceChildren(
+      expired ? h('div', { class: 'hint warn' }, t('ver.expired')) : null,
+      rej ? h('div', { class: 'hint bad' }, t('ver.rejected', { reason: rej })) : null,
+      h('div', { class: 'hint' }, kind === 'face' ? t('face.why', { h: S.cfg.face_check_hours }) : t('ver.intro')),
+      h('div', { class: 'card col' }, h('b', null, t('ver.code.t')), h('div', { class: 'codebox', 'aria-label': t('ver.code.t') }, challenge), h('p', { class: 'muted small' }, t('ver.code.d'))),
+      h('div', { class: 'tiles' }, tiles),
+      h('div', { class: 'hint warn' }, t('ver.tips')),
+      h('label', { class: 'row', for: 'consent', style: 'align-items:flex-start' }, consent, h('span', { class: 'small' }, t('ver.consent'))),
+      window.__DEMO__ ? h('div', { class: 'hint warn' }, 'Демо: личные документы не загружайте. Нажмите кнопку ниже, чтобы подставить образцы.') : null,
+      window.__DEMO__ ? h('button', { class: 'btn block', onclick: () => tiles.forEach((tl, i) => tl._set(window.__demoPhoto(t('doc.' + keys[i])))) }, 'Подставить демо-фото') : null,
+      err, send);
+  }).catch((e) => body.replaceChildren(h('div', { class: 'hint bad' }, errText(e.code))));
+}
+
+function driverWaiting() {
+  const d = S.driver;
+  shell('/drive', h('header', { class: 'topbar' }, h('h2', null, t('ver.wait.t')), langToggle()),
+    h('div', { class: 'card col center' }, h('div', { class: 'row', style: 'justify-content:center' }, h('span', { class: 'pulse' })),
+      h('p', null, t('ver.wait.d')), h('p', { class: 'muted small' }, t('ver.wait.sent', { time: fmtDT(d.verification_pending.created_at) })),
+      h('p', { class: 'muted small' }, t('ver.wait.keep'))),
+    h('button', { class: 'btn', onclick: async () => { await loadMe(); route(); } }, t('common.refresh')));
+  every(15000, async () => { await loadMe(); if (S.driver.status !== 'pending') route(); });
+}
+
+function startWatch() {
+  if (S.watchId != null || !navigator.geolocation) return;
+  S.watchId = navigator.geolocation.watchPosition((p) => {
+    S.pos = { lat: p.coords.latitude, lng: p.coords.longitude };
+    if (Date.now() - S.lastLocPost > 8000) {
+      S.lastLocPost = Date.now();
+      api('POST', '/api/driver/location', S.pos).catch((e) => { if (e.code === 'not_online') { S.driver.online = false; stopWatch(); } });
+    }
+  }, () => {}, { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+}
+function stopWatch() { if (S.watchId != null) navigator.geolocation.clearWatch(S.watchId); S.watchId = null; }
+
+function driverDashboard() {
+  const d = S.driver;
+  const top = h('div', { class: 'col' });
+  const offersBox = h('div', { class: 'col' });
+  const drive = h('div', { class: 'col' });
+  const faceBox = h('div', { class: 'col' });
+  const statsBox = h('div', { class: 'kpis' });
+  shell('/drive', h('header', { class: 'topbar' }, h('h2', null, t('drv.title')), langToggle()), top, faceBox, drive, offersBox, statsBox,
+    h('div', { class: 'hint ok' }, t('drv.nocomm', { p: S.cfg.commission_percent })));
+
+  /* линия */
+  const sw = h('input', { type: 'checkbox', id: 'online', checked: d.online, role: 'switch', 'aria-label': t('drv.online') });
+  sw.addEventListener('change', async () => {
+    sw.disabled = true;
+    try {
+      if (sw.checked) {
+        const p = await getPosition(); S.pos = p;
+        const r = await api('POST', '/api/driver/online', { online: true, ...p });
+        S.driver = r.driver; S.offers = r.offers; startWatch(); toast(t('drv.online.on'));
+      } else {
+        const r = await api('POST', '/api/driver/online', { online: false });
+        S.driver = r.driver; S.offers = []; stopWatch(); toast(t('drv.online.off'));
+      }
+    } catch (e) { sw.checked = !sw.checked; toast(errText(e.code)); }
+    sw.disabled = false; route();
+  });
+  top.append(h('div', { class: 'card row between' },
+    h('div', null, h('b', null, d.online ? t('drv.online.on') : t('drv.online.off')), h('div', { class: 'muted small' }, `${d.car_make} ${d.car_model} · ${d.plate} · ${t('cls.' + d.car_class)}`)),
+    h('label', { class: 'switch' }, sw, h('i'))));
+  if (d.online) startWatch();
+
+  /* проверка лица */
+  const left = d.face_valid_until - Date.now();
+  const soon = left < 6 * 3600_000;
+  faceBox.append(h('div', { class: 'card col' },
+    h('div', { class: 'row between' }, h('b', null, t('face.card.t')), h('span', { class: 'pill ' + (left <= 0 ? 'bad' : soon ? 'warn' : 'ok') }, fmtLeft(left))),
+    h('p', { class: 'muted small' }, left > 0 ? t('face.card.until', { time: fmtDT(d.face_valid_until) }) : t('face.card.expired')),
+    d.face_reject_reason ? h('div', { class: 'hint bad' }, t('ver.rejected', { reason: d.face_reject_reason })) : null,
+    d.verification_pending?.kind === 'face' ? h('div', { class: 'hint' }, t('face.pending'))
+      : (soon || d.face_reject_reason) ? h('button', { class: 'btn primary block', onclick: () => driverVerification('face') }, t('face.go')) : null));
+  every(60000, () => { if (currentPath() === '/drive') route(); });
+
+  /* текущая поездка */
+  const ad = S.activeDrive;
+  if (ad) {
+    const nav = (p) => h('a', { class: 'btn small', target: '_blank', rel: 'noopener', href: `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=driving` }, t('drv.nav'));
+    const act = (path, key, cls = 'primary') => { const b = h('button', { class: `btn ${cls} block` }, t(key)); b.onclick = guard(b, async () => { const r = await api('POST', `/api/rides/${ad.id}/${path}`); S.activeDrive = r.ride; route(); }); return b; };
+    const rel = h('button', { class: 'btn danger block' }, t('drv.release'));
+    rel.onclick = guard(rel, async () => { await api('POST', `/api/rides/${ad.id}/cancel`, {}); S.activeDrive = null; route(); });
+    drive.append(h('div', { class: 'card col', style: 'border-color:var(--yellow);border-width:2px' },
+      h('div', { class: 'row between' }, h('b', null, t('drv.current')), h('span', { class: 'pill' }, t('st.' + ad.status))),
+      h('div', { class: 'row between' }, h('span', null, `${ad.passenger.name} · ${ratingText(ad.passenger.rating, ad.passenger.rating_count)}`), h('a', { class: 'btn small', href: `tel:${ad.passenger.phone}` }, t('ride.call'))),
+      h('div', { class: 'addr' }, h('span', { class: 'dot a' }), ad.pickup.addr), h('div', { class: 'addr' }, h('span', { class: 'dot b' }), ad.drop.addr),
+      ad.comment ? h('div', { class: 'hint' }, ad.comment) : null,
+      h('div', { class: 'row between' }, h('span', { class: 'muted' }, t('drv.cash.get')), h('span', { class: 'price', style: 'font-size:24px' }, money(ad.price))),
+      ad.status === 'in_progress' ? nav(ad.drop) : nav(ad.pickup),
+      ad.status === 'accepted' ? act('arrived', 'drv.arrived') : null,
+      ad.status === 'arrived' ? act('start', 'drv.start') : null,
+      ad.status === 'in_progress' ? act('complete', 'drv.complete') : null,
+      ['accepted', 'arrived'].includes(ad.status) ? rel : null));
+  }
+
+  /* заказы */
+  renderOffers = () => {
+    if (!d.online || S.activeDrive) { offersBox.replaceChildren(); return; }
+    offersBox.replaceChildren(h('h3', null, t('drv.offers')),
+      ...(S.offers.length ? S.offers.map((o) => {
+        const b = h('button', { class: 'btn primary block' }, t('drv.accept', { price: money(o.price) }));
+        b.onclick = guard(b, async () => { try { const r = await api('POST', `/api/rides/${o.id}/accept`); S.activeDrive = r.ride; S.offers = []; route(); } catch (e) { S.offers = S.offers.filter((x) => x.id !== o.id); renderOffers(); throw e; } });
+        return h('div', { class: 'card col' },
+          h('div', { class: 'row between' }, h('span', { class: 'pill' }, t('cls.' + o.car_class)), h('span', { class: 'price', style: 'font-size:20px' }, money(o.price))),
+          h('div', { class: 'addr' }, h('span', { class: 'dot a' }), o.pickup.addr), h('div', { class: 'addr' }, h('span', { class: 'dot b' }), o.drop.addr),
+          h('div', { class: 'muted small' }, t('drv.offer.meta', { km: o.distance_km, min: o.duration_min, to: o.to_pickup_km ?? '—' })),
+          o.comment ? h('div', { class: 'hint' }, o.comment) : null, b);
+      }) : [h('div', { class: 'card center muted' }, t('drv.offers.none'))]));
+  };
+  renderOffers();
+  if (d.online) every(10000, async () => { try { S.offers = (await api('GET', '/api/driver/offers')).offers; renderOffers(); } catch { /* повторим */ } });
+
+  /* статистика */
+  api('GET', '/api/driver/stats').then((s) => {
+    statsBox.replaceChildren(...[['today', 'stat.today'], ['week', 'stat.week'], ['month', 'stat.month']].map(([k, tk]) =>
+      h('div', { class: 'kpi' }, h('span', null, t(tk)), h('b', null, money(s[k].earned)), h('span', null, t('stat.rides', { n: s[k].rides })))));
+  }).catch(() => {});
+}
+
+boot();
+
+})();
+</script>
+<script>
+(function () {
+'use strict';
+/* Админ-панель KUKA TAXI: ручная проверка водителей, список водителей, поездки, настройки. */
+const root = document.getElementById('root');
+
+const money = (n) => `${Math.round(n).toLocaleString('ru-RU')} ₸`;
+const fmt = (ms) => (ms ? new Intl.DateTimeFormat('ru-RU', { timeZone: 'Asia/Almaty', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(ms) : '—');
+
+function h(tag, props, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k.startsWith('on')) el.addEventListener(k.slice(2).toLowerCase(), v);
+    else if (['value', 'checked', 'disabled', 'type', 'placeholder', 'id', 'inputMode', 'maxLength', 'rows', 'min', 'max', 'step'].includes(k)) el[k] = v;
+    else el.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat(Infinity)) if (kid != null && kid !== false) el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  return el;
+}
+
+const ERR = {
+  unauthorized: 'Войдите снова.', forbidden: 'Нет прав администратора. Ваш номер должен быть в ADMIN_PHONES.', reason_required: 'Укажите причину отказа.',
+  bad_value: 'Недопустимое значение.', wrong_code: 'Неверный код.', code_expired: 'Код устарел.', cooldown: 'Подождите перед повтором.', bad_phone: 'Введите казахстанский номер.',
+  send_failed: 'Код не отправился в WhatsApp.', too_many_requests: 'Слишком много попыток.', not_found: 'Заявка уже обработана или удалена.', name_required: 'Укажите имя.',
+};
+async function api(method, path, body) {
+  const res = await fetch(path, { method, headers: { 'X-KUKA': '1', 'X-Demo-Admin': '1', ...(body ? { 'Content-Type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined });
+  let data = null; try { data = await res.json(); } catch { /* пусто */ }
+  if (!res.ok) { const e = new Error(data?.error || 'generic'); e.code = data?.error || 'generic'; e.status = res.status; throw e; }
+  return data;
+}
+const errMsg = (e) => ERR[e.code] || 'Ошибка: ' + e.code;
+function toast(msg) { document.querySelector('.toast')?.remove(); const el = h('div', { class: 'toast', role: 'status' }, msg); document.body.append(el); setTimeout(() => el.remove(), 3500); }
+
+let es = null; let tab = 'queue'; let me = null; let queueSize = 0;
+
+/* ---------- вход ---------- */
+function login() {
+  let phone = '';
+  const box = h('div', { class: 'card col' });
+  root.replaceChildren(h('div', { class: 'adm', style: 'max-width:480px' }, h('a', { class: 'logo', href: '#', onclick: (e) => e.preventDefault() }, 'KUKA', h('small', null, 'ADMIN')), box));
+  const stepPhone = () => {
+    const inp = h('input', { class: 'input', id: 'p', type: 'tel', inputMode: 'tel', placeholder: '701 234 56 78' });
+    const err = h('div', { class: 'err', role: 'alert' });
+    const btn = h('button', { class: 'btn primary block' }, 'Получить код в WhatsApp');
+    btn.onclick = async () => {
+      btn.disabled = true; err.textContent = '';
+      let d = inp.value.replace(/\D/g, ''); if (d.length === 11 && /^[78]/.test(d)) d = d.slice(1); phone = '+7' + d;
+      try { const r = await api('POST', '/api/auth/request', { phone }); stepCode(r.dev_code, r.new_user); }
+      catch (e) { if (e.code === 'cooldown') stepCode(); else { err.textContent = errMsg(e); btn.disabled = false; } }
+    };
+    box.replaceChildren(h('h2', null, 'Вход администратора'), h('label', { class: 'f', for: 'p' }, 'Телефон', inp), err, btn);
+    inp.focus();
+  };
+  const stepCode = (dev, isNew) => {
+    const code = h('input', { class: 'input code-input', id: 'c', inputMode: 'numeric', maxLength: 6, autocomplete: 'one-time-code' });
+    const name = isNew ? h('input', { class: 'input', placeholder: 'Ваше имя' }) : null;
+    const err = h('div', { class: 'err', role: 'alert' });
+    const btn = h('button', { class: 'btn primary block' }, 'Войти');
+    btn.onclick = async () => {
+      btn.disabled = true; err.textContent = '';
+      try { await api('POST', '/api/auth/verify', { phone, code: code.value.trim(), name: name?.value.trim() }); start(); }
+      catch (e) { err.textContent = errMsg(e); btn.disabled = false; }
+    };
+    box.replaceChildren(h('h2', null, 'Код из WhatsApp'), dev ? h('div', { class: 'hint warn' }, 'DEV: ' + dev) : null, name, h('label', { class: 'f', for: 'c' }, 'Код', code), err, btn);
+    (name || code).focus();
+  };
+  stepPhone();
+}
+
+/* ---------- каркас ---------- */
+const root2 = h('div', { class: 'adm' });
+function frame(content) {
+  const names = [['queue', `Очередь${queueSize ? ` (${queueSize})` : ''}`], ['drivers', 'Водители'], ['rides', 'Поездки'], ['settings', 'Настройки']];
+  root.replaceChildren(h('div', { class: 'adm' },
+    h('div', { class: 'row between wrap' }, h('a', { class: 'logo', href: '#', onclick: (e) => e.preventDefault() }, 'KUKA', h('small', null, 'ADMIN')),
+      h('div', { class: 'row' }, h('span', { class: 'muted small' }, me?.name), h('button', { class: 'btn small', onclick: async () => { await api('POST', '/api/auth/logout', {}); es?.close(); login(); } }, 'Выйти'))),
+    h('div', { class: 'tabs', role: 'tablist' }, names.map(([k, label]) => h('button', { class: 'btn small' + (tab === k ? ' on' : ''), role: 'tab', 'aria-selected': String(tab === k), onclick: () => { tab = k; render(); } }, label))),
+    content));
+}
+
+async function render() {
+  const holder = h('div', { class: 'col' }, h('p', { class: 'muted' }, 'Загрузка…'));
+  frame(holder);
+  try {
+    const view = await ({ queue: queueView, drivers: driversView, rides: ridesView, settings: settingsView }[tab])();
+    holder.replaceChildren(view);
+  } catch (e) { holder.replaceChildren(h('div', { class: 'hint bad' }, errMsg(e))); }
+}
+
+/* ---------- очередь проверки ---------- */
+const CHECKS = {
+  registration: [
+    'Лицо на селфи совпадает с фото в удостоверении личности',
+    'В кадре селфи виден лист с кодом, он совпадает с кодом ниже',
+    'Удостоверение личности действительно, данные читаются',
+    'Водительское удостоверение действительно и нужной категории (B)',
+    'ФИО в правах совпадает с ФИО в удостоверении',
+    'Техпаспорт: марка, модель и госномер совпадают с анкетой',
+    'На фото автомобиля виден тот же госномер, авто в нормальном состоянии',
+  ],
+  face: ['Лицо совпадает с ранее проверенным водителем', 'В кадре виден лист с кодом, он совпадает с кодом ниже', 'Фото сделано сейчас, без маски, очков и фильтров'],
+};
+const LABEL = { selfie_with_id: 'Селфи с удостоверением', id_front: 'Удостоверение, лицо', id_back: 'Удостоверение, оборот', license_front: 'Права, лицо', license_back: 'Права, оборот', tech_passport: 'Техпаспорт', car_photo: 'Фото авто' };
+
+let selected = null;
+async function queueView() {
+  const { items } = await api('GET', '/api/admin/verifications');
+  queueSize = items.length;
+  const wrap = h('div', { class: 'split' });
+  const list = h('div', { class: 'col' });
+  const detail = h('div', { class: 'card col' });
+  if (!items.find((i) => i.id === selected)) selected = items[0]?.id || null;
+
+  const showDetail = () => {
+    const it = items.find((i) => i.id === selected);
+    if (!it) { detail.replaceChildren(h('p', { class: 'muted center' }, 'Очередь пуста. Новые заявки появятся здесь сами.')); return; }
+    const d = it.driver;
+    const checks = CHECKS[it.kind].map((c, i) => h('label', null, h('input', { type: 'checkbox', class: 'chk' }), h('span', null, c)));
+    const reason = h('textarea', { class: 'input', rows: 2, maxLength: 200, placeholder: 'Причина отказа (увидит водитель)' });
+    const ok = h('button', { class: 'btn primary' }, it.kind === 'face' ? 'Лицо подтверждено' : 'Допустить к работе');
+    const no = h('button', { class: 'btn danger' }, 'Отказать');
+    const decide = (approve) => async (btn) => {
+      if (approve && ![...detail.querySelectorAll('.chk')].every((c) => c.checked)) return toast('Отметьте все пункты проверки');
+      btn.disabled = true;
+      try { await api('POST', `/api/admin/verifications/${it.id}/decision`, { approve, reason: reason.value.trim() }); toast(approve ? 'Допущен' : 'Отказ отправлен'); render(); }
+      catch (e) { toast(errMsg(e)); btn.disabled = false; if (e.code === 'not_found') render(); }
+    };
+    ok.onclick = () => decide(true)(ok); no.onclick = () => decide(false)(no);
+    detail.replaceChildren(
+      h('div', { class: 'row between wrap' }, h('h2', null, d.name || 'Водитель'), h('span', { class: 'pill ' + (it.kind === 'face' ? 'warn' : '') }, it.kind === 'face' ? 'Проверка лица' : 'Регистрация')),
+      h('div', { class: 'muted' }, `${d.phone} · ${d.city || ''}`),
+      h('div', null, `${d.car || ''} · `, h('span', { class: 'plate', style: 'font-size:14px' }, d.plate || ''), ` · класс: ${d.car_class || ''}`),
+      h('div', { class: 'row' }, h('span', { class: 'muted' }, 'Код на листе:'), h('b', { class: 'price', style: 'font-size:28px;letter-spacing:.15em' }, it.challenge)),
+      h('div', { class: 'photos' }, it.keys.map((k) => {
+        const src = it.demoImages?.[k] || `/api/admin/verifications/${it.id}/image/${k}`;
+        const img = h('img', { src, alt: LABEL[k], loading: 'lazy' });
+        img.onclick = () => { const big = h('div', { class: 'big', onclick: () => big.remove() }, h('img', { src, alt: LABEL[k] })); document.body.append(big); };
+        return h('figure', null, img, h('figcaption', null, LABEL[k]));
+      })),
+      h('div', { class: 'checks' }, checks),
+      reason, h('div', { class: 'row wrap' }, ok, no),
+      h('p', { class: 'muted small' }, 'После решения фото удаляются из памяти сервера. Запросить их повторно нельзя, водитель отправит новые.'));
+  };
+
+  const renderList = () => list.replaceChildren(...(items.length ? items.map((it) => h('button', { class: 'qitem', 'aria-pressed': String(it.id === selected), onclick: () => { selected = it.id; renderList(); showDetail(); } },
+    h('b', null, it.driver.name || 'Водитель'), h('span', { class: 'muted small' }, `${it.kind === 'face' ? 'Проверка лица' : 'Регистрация'} · ${fmt(it.createdAt)}`), h('span', { class: 'muted small' }, it.driver.plate || ''))) : [h('div', { class: 'card muted center' }, 'Нет заявок')]));
+  renderList(); showDetail();
+  wrap.append(list, detail);
+  return wrap;
+}
+
+/* ---------- водители ---------- */
+async function driversView() {
+  const { drivers } = await api('GET', '/api/admin/drivers');
+  const stats = await api('GET', '/api/admin/stats');
+  const kpi = (l, v) => h('div', { class: 'kpi' }, h('span', null, l), h('b', null, v));
+  const act = (label, path, body, cls = '') => h('button', { class: 'btn small ' + cls, onclick: async (e) => { e.target.disabled = true; try { await api('POST', path, body); render(); } catch (er) { toast(errMsg(er)); e.target.disabled = false; } } }, label);
+  const st = { draft: 'анкета', pending: 'на проверке', approved: 'допущен', rejected: 'отклонён', suspended: 'приостановлен' };
+  return h('div', { class: 'col' },
+    h('div', { class: 'kpis', style: 'grid-template-columns:repeat(auto-fit,minmax(140px,1fr))' }, kpi('Пользователей', stats.users), kpi('Водителей допущено', stats.drivers_approved), kpi('Сейчас на линии', stats.drivers_online), kpi('Поездок сегодня', `${stats.rides_completed_today}/${stats.rides_today}`)),
+    h('div', { class: 'card pad0 tablewrap' }, h('table', null,
+      h('thead', null, h('tr', null, ['Водитель', 'Телефон', 'Авто', 'Статус', 'Лицо до', 'Рейтинг', 'Поездок', ''].map((x) => h('th', null, x)))),
+      h('tbody', null, drivers.length ? drivers.map((d) => h('tr', null,
+        h('td', null, d.name), h('td', null, d.phone), h('td', null, `${d.car_make} ${d.car_model} · ${d.plate}`),
+        h('td', null, h('span', { class: 'pill ' + (d.status === 'approved' ? 'ok' : d.status === 'suspended' || d.status === 'rejected' ? 'bad' : 'warn') }, st[d.status] || d.status), d.online ? ' ' : '', d.online ? h('span', { class: 'pill ok' }, 'на линии') : null),
+        h('td', null, d.face_valid_until ? fmt(d.face_valid_until) : '—'), h('td', null, d.rating ?? '—'), h('td', null, d.rides),
+        h('td', null, h('div', { class: 'row gap8' },
+          d.status === 'approved' ? act('Сверить лицо', `/api/admin/drivers/${d.id}/face-reset`, {}) : null,
+          d.status === 'approved' ? act('Приостановить', `/api/admin/drivers/${d.id}/status`, { status: 'suspended' }, 'danger') : null,
+          d.status === 'suspended' ? act('Вернуть доступ', `/api/admin/drivers/${d.id}/status`, { status: 'approved' }) : null)))) : [h('tr', null, h('td', { colspan: 8, class: 'muted' }, 'Водителей пока нет')) ]))));
+}
+
+/* ---------- поездки ---------- */
+async function ridesView() {
+  const { rides } = await api('GET', '/api/admin/rides');
+  const st = { searching: 'поиск', accepted: 'едет', arrived: 'на месте', in_progress: 'в пути', completed: 'завершена', cancelled: 'отменена', expired: 'без водителя' };
+  return h('div', { class: 'card pad0 tablewrap' }, h('table', null,
+    h('thead', null, h('tr', null, ['№', 'Время', 'Пассажир', 'Водитель', 'Маршрут', 'Км', 'Цена', 'Статус', 'Оценки'].map((x) => h('th', null, x)))),
+    h('tbody', null, rides.length ? rides.map((r) => h('tr', null, h('td', null, r.id), h('td', null, fmt(r.created_at)), h('td', null, r.passenger_name), h('td', null, r.driver_name || '—'),
+      h('td', { style: 'white-space:normal;min-width:240px' }, `${r.pickup.addr} → ${r.drop.addr}`), h('td', null, r.distance_km), h('td', null, money(r.price)),
+      h('td', null, h('span', { class: 'pill ' + (r.status === 'completed' ? 'ok' : ['cancelled', 'expired'].includes(r.status) ? 'bad' : '') }, st[r.status])),
+      h('td', null, `${r.rating_for_driver ?? '·'} / ${r.rating_for_passenger ?? '·'}`))) : [h('tr', null, h('td', { colspan: 9, class: 'muted' }, 'Поездок пока нет'))])));
+}
+
+/* ---------- настройки ---------- */
+async function settingsView() {
+  const s = await api('GET', '/api/admin/settings');
+  const num = (id, v, step = 1) => h('input', { class: 'input', id, type: 'number', value: v, step, min: 0 });
+  const face = num('face', s.face_check_hours), com = num('com', s.commission_percent, 0.5), rad = num('rad', s.offer_radius_km);
+  const names = { economy: 'Эконом', comfort: 'Комфорт', business: 'Бизнес', minivan: 'Минивэн' };
+  const tf = {};
+  const rows = Object.keys(names).map((c) => {
+    tf[c] = { base: num('b' + c, s.tariffs[c].base), per_km: num('k' + c, s.tariffs[c].per_km), per_min: num('m' + c, s.tariffs[c].per_min), min: num('n' + c, s.tariffs[c].min) };
+    return h('tr', null, h('td', null, names[c]), ...['base', 'per_km', 'per_min', 'min'].map((k) => h('td', null, tf[c][k])));
+  });
+  const save = h('button', { class: 'btn primary' }, 'Сохранить');
+  save.onclick = async () => {
+    save.disabled = true;
+    try {
+      await api('PUT', '/api/admin/settings', {
+        face_check_hours: Number(face.value), commission_percent: Number(com.value), offer_radius_km: Number(rad.value),
+        tariffs: Object.fromEntries(Object.keys(names).map((c) => [c, Object.fromEntries(Object.entries(tf[c]).map(([k, el]) => [k, Number(el.value)]))])),
+      });
+      toast('Сохранено');
+    } catch (e) { toast(errMsg(e)); }
+    save.disabled = false;
+  };
+  return h('div', { class: 'col' },
+    h('div', { class: 'card col' }, h('h3', null, 'Правила'),
+      h('div', { class: 'grid3' }, h('label', { class: 'f', for: 'face' }, 'Проверка лица каждые, часов', face), h('label', { class: 'f', for: 'com' }, 'Комиссия с водителей, %', com), h('label', { class: 'f', for: 'rad' }, 'Радиус рассылки заказов, км', rad)),
+      h('p', { class: 'muted small' }, 'Комиссия записывается в каждую новую поездку на момент заказа. Изменение не затрагивает уже созданные поездки.')),
+    h('div', { class: 'card col' }, h('h3', null, 'Тарифы, ₸'),
+      h('p', { class: 'muted small' }, 'Цена = посадка + км × цена за км + минуты × цена за минуту, но не меньше минимальной. Стартовые числа примерные, подгоните под ваш город.'),
+      h('div', { class: 'tablewrap' }, h('table', null, h('thead', null, h('tr', null, ['Класс', 'Посадка', 'За км', 'За минуту', 'Минимум'].map((x) => h('th', null, x)))), h('tbody', null, rows)))),
+    save);
+}
+
+/* ---------- старт ---------- */
+async function start() {
+  try { me = (await api('GET', '/api/me')).user; } catch { return login(); }
+  if (!me.is_admin) { root.replaceChildren(h('div', { class: 'adm', style: 'max-width:480px' }, h('div', { class: 'card col' }, h('h2', null, 'Нет доступа'), h('p', { class: 'muted' }, 'Этот номер не указан как администратор (ADMIN_PHONES).'), h('button', { class: 'btn', onclick: async () => { await api('POST', '/api/auth/logout', {}); login(); } }, 'Выйти')))); return; }
+  es?.close();
+  es = new EventSource('/api/stream?admin=1');
+  es.addEventListener('queue', (e) => { try { queueSize = JSON.parse(e.data).size; } catch { /* ok */ } render(); });
+  render();
+}
+start();
+
+})();
+</script>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const show = (admin) => { $('app').hidden = admin; $('root').hidden = !admin; $('demoSite').setAttribute('aria-pressed', String(!admin)); $('demoAdmin').setAttribute('aria-pressed', String(admin)); window.scrollTo(0, 0); };
+  $('demoSite').onclick = () => show(false); $('demoAdmin').onclick = () => show(true);
+  $('demoHelp').onclick = () => { const b = $('demoHelpBox'); b.hidden = !b.hidden; $('demoHelp').setAttribute('aria-expanded', String(!b.hidden)); };
+  $('demoReset').onclick = () => window.__demoReset();
+})();
+</script>
+</body>
+</html>
