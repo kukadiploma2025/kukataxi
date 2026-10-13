@@ -1,0 +1,13 @@
+{
+  "name": "kuka-taxi",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "KUKA TAXI: такси-сервис для Казахстана (пассажиры, водители, админ-панель). Без внешних зависимостей.",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test test/smoke.test.js"
+  },
+  "engines": { "node": ">=22.5" }
+}

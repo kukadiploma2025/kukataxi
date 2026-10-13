@@ -1,0 +1,10 @@
+{
+  "name": "KUKA TAXI",
+  "short_name": "KUKA TAXI",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F2F5F9",
+  "theme_color": "#FFC21A",
+  "lang": "ru",
+  "icons": [{ "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FFC21A'/%3E%3Cpath d='M18 14h9v14l13-14h11L35 31l17 19H40L27 36v14h-9z' fill='%231A1400'/%3E%3C/svg%3E", "sizes": "any", "type": "image/svg+xml" }]
+}
